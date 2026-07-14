@@ -2,7 +2,8 @@
 
 import { useState, useRef } from "react";
 import { Download, Upload, FileSpreadsheet, FileText, ChevronDown, Check, AlertCircle } from "lucide-react";
-import * as XLSX from "xlsx-js-style";
+import * as ExcelJS from "exceljs";
+import { saveAs } from "file-saver";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -30,73 +31,28 @@ export function ImportExportToolbar({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 1. Download Template Excel (Header locked, comments added)
-  const handleDownloadTemplate = () => {
-    // Generate headers and a helper placeholder row
-    const placeholderRow = headers.map(h => {
-      const lowerH = h.toLowerCase();
-      if (lowerH.includes("nama")) return "Contoh Nama Santri";
-      if (lowerH.includes("nik")) return "3171010101990001";
-      if (lowerH.includes("stambuk")) return "26071301";
-      if (lowerH.includes("kelas")) return "Tsanawiyyah I-A";
-      if (lowerH.includes("alamat")) return "Jl. H. Sholihin No. 45, Jakarta";
-      if (lowerH.includes("kategori")) return "Kedisiplinan";
-      if (lowerH.includes("keparahan")) return "Sedang";
-      if (lowerH.includes("poin")) return "10";
-      if (lowerH.includes("tipe") || lowerH.includes("jenis")) return "MAPEL";
-      if (lowerH.includes("status")) return "AKTIF";
-      if (lowerH.includes("kode")) return "MP-001";
-      return "Isi data di sini...";
-    });
+  const handleDownloadTemplate = async () => {
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet("Template");
 
-    // Buat 500 baris kosong untuk area input user agar bisa di-unlock
-    const templateData = [headers, placeholderRow];
-    for (let i = 0; i < 499; i++) {
-      templateData.push(headers.map(() => ""));
-    }
+    // Protect sheet
+    await sheet.protect("mphm", { selectLockedCells: true, selectUnlockedCells: true });
 
-    const ws = XLSX.utils.aoa_to_sheet(templateData);
+    // Set headers
+    sheet.columns = headers.map(h => ({ header: h, key: h, width: 25 }));
+    const headerRow = sheet.getRow(1);
 
-    // Proteksi sheet dengan password
-    ws["!protect"] = { password: "mphm", selectLockedCells: true, selectUnlockedCells: true };
+    headerRow.eachCell((cell, colNumber) => {
+      // Style headers
+      cell.font = { bold: true };
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFE2E8F0' }
+      };
+      cell.protection = { locked: true };
 
-    const range = XLSX.utils.decode_range(ws["!ref"] || "A1");
-    for (let C = range.s.c; C <= range.e.c; ++C) {
-      for (let R = range.s.r; R <= range.e.r; ++R) {
-        const cellRef = XLSX.utils.encode_cell({ c: C, r: R });
-        if (!ws[cellRef]) ws[cellRef] = { t: "s", v: "" };
-        
-        if (R === 0) {
-          // Baris Header: Dikunci, tebal, abu-abu, ada komentar
-          const h = headers[C] || "";
-          let commentText = "Masukkan data sesuai dengan kolom yang diminta.";
-          if (h.toLowerCase().includes("nama")) commentText = "Masukkan nama lengkap santri sesuai dokumen resmi.";
-          else if (h.toLowerCase().includes("nik")) commentText = "Masukkan 16 digit Nomor Induk Kependudukan (NIK) resmi.";
-          else if (h.toLowerCase().includes("stambuk")) commentText = "Masukkan nomor stambuk induk dari madrasah.";
-          else if (h.toLowerCase().includes("kelas")) commentText = "Format kelas wajib. Contoh: Tsanawiyyah I-A.";
-          else if (h.toLowerCase().includes("alamat")) commentText = "Alamat lengkap menggunakan data wilayah.";
-          else if (h.toLowerCase().includes("nilai")) commentText = "Rentang nilai 0 - 10 (Maksimal 8 untuk mata pelajaran SAKRAL).";
-          
-          ws[cellRef].s = {
-            font: { bold: true, color: { rgb: "000000" } },
-            fill: { fgColor: { rgb: "E2E8F0" } },
-            protection: { locked: true }
-          };
-          ws[cellRef].c = [{ a: "MPHM", t: commentText }];
-        } else {
-          // Baris Data: Tidak dikunci agar bisa diedit user
-          ws[cellRef].s = {
-            protection: { locked: false }
-          };
-        }
-      }
-    }
-
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Template");
-
-    // Add a separate tab for instructions to avoid the Excel VML shape display bug
-    const petunjukHeaders = ["Nama Kolom", "Petunjuk Pengisian / Ketentuan"];
-    const petunjukRows = headers.map(h => {
+      const h = headers[colNumber - 1] || "";
       let commentText = "Masukkan data sesuai dengan kolom yang diminta.";
       if (h.toLowerCase().includes("nama")) commentText = "Masukkan nama lengkap santri sesuai dokumen resmi.";
       else if (h.toLowerCase().includes("nik")) commentText = "Masukkan 16 digit Nomor Induk Kependudukan (NIK) resmi.";
@@ -104,87 +60,140 @@ export function ImportExportToolbar({
       else if (h.toLowerCase().includes("kelas")) commentText = "Format kelas wajib. Contoh: Tsanawiyyah I-A.";
       else if (h.toLowerCase().includes("alamat")) commentText = "Alamat lengkap menggunakan data wilayah.";
       else if (h.toLowerCase().includes("nilai")) commentText = "Rentang nilai 0 - 10 (Maksimal 8 untuk mata pelajaran SAKRAL).";
-      return [h, commentText];
+      
+      // Add hidden note (comment) that appears on hover
+      cell.note = commentText;
     });
 
-    const wsPetunjuk = XLSX.utils.aoa_to_sheet([petunjukHeaders, ...petunjukRows]);
+    // Add placeholder row and style as unlocked
+    const placeholderRowData: Record<string, string> = {};
+    headers.forEach(h => {
+      const lowerH = h.toLowerCase();
+      if (lowerH.includes("nama")) placeholderRowData[h] = "Contoh Nama Santri";
+      else if (lowerH.includes("nik")) placeholderRowData[h] = "3171010101990001";
+      else if (lowerH.includes("stambuk")) placeholderRowData[h] = "26071301";
+      else if (lowerH.includes("kelas")) placeholderRowData[h] = "Tsanawiyyah I-A";
+      else if (lowerH.includes("alamat")) placeholderRowData[h] = "Jl. H. Sholihin No. 45, Jakarta";
+      else if (lowerH.includes("kategori")) placeholderRowData[h] = "Kedisiplinan";
+      else if (lowerH.includes("keparahan")) placeholderRowData[h] = "Sedang";
+      else if (lowerH.includes("poin")) placeholderRowData[h] = "10";
+      else if (lowerH.includes("tipe") || lowerH.includes("jenis")) placeholderRowData[h] = "MAPEL";
+      else if (lowerH.includes("status")) placeholderRowData[h] = "AKTIF";
+      else if (lowerH.includes("kode")) placeholderRowData[h] = "MP-001";
+      else placeholderRowData[h] = "Isi data di sini...";
+    });
     
-    // Set auto width for petunjuk worksheet columns
-    wsPetunjuk["!cols"] = [
-      { wch: 20 },
-      { wch: 60 }
+    sheet.addRow(placeholderRowData);
+
+    // Provide 500 unlocked rows for user input
+    for (let r = 2; r <= 501; r++) {
+      const row = sheet.getRow(r);
+      for (let c = 1; c <= headers.length; c++) {
+        row.getCell(c).protection = { locked: false };
+      }
+    }
+
+    // Add a separate tab for instructions
+    const wsPetunjuk = workbook.addWorksheet("Petunjuk Pengisian");
+    wsPetunjuk.columns = [
+      { header: "Nama Kolom", key: "col", width: 25 },
+      { header: "Petunjuk Pengisian / Ketentuan", key: "desc", width: 80 }
     ];
+    
+    wsPetunjuk.getRow(1).font = { bold: true };
+    wsPetunjuk.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE2E8F0' } };
 
-    XLSX.utils.book_append_sheet(wb, wsPetunjuk, "Petunjuk Pengisian");
+    headers.forEach(h => {
+      let commentText = "Masukkan data sesuai dengan kolom yang diminta.";
+      if (h.toLowerCase().includes("nama")) commentText = "Masukkan nama lengkap santri sesuai dokumen resmi.";
+      else if (h.toLowerCase().includes("nik")) commentText = "Masukkan 16 digit Nomor Induk Kependudukan (NIK) resmi.";
+      else if (h.toLowerCase().includes("stambuk")) commentText = "Masukkan nomor stambuk induk dari madrasah.";
+      else if (h.toLowerCase().includes("kelas")) commentText = "Format kelas wajib. Contoh: Tsanawiyyah I-A.";
+      else if (h.toLowerCase().includes("alamat")) commentText = "Alamat lengkap menggunakan data wilayah.";
+      else if (h.toLowerCase().includes("nilai")) commentText = "Rentang nilai 0 - 10 (Maksimal 8 untuk mata pelajaran SAKRAL).";
+      wsPetunjuk.addRow({ col: h, desc: commentText });
+    });
 
-    XLSX.writeFile(wb, `${title.replace(/\s+/g, "_").toLowerCase()}_template.xlsx`);
+    const buffer = await workbook.xlsx.writeBuffer();
+    saveAs(new Blob([buffer]), `${title.replace(/\s+/g, "_").toLowerCase()}_template.xlsx`);
     setShowImportDropdown(false);
   };
 
   // 2. Upload and Parse Excel File
-  const handleUploadExcel = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUploadExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setImportError(null);
     setImportSuccess(false);
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
     const file = files[0];
-    const reader = new FileReader();
-
-    reader.onload = (evt) => {
-      try {
-        const bstr = evt.target?.result;
-        const wb = XLSX.read(bstr, { type: "binary" });
-        const wsname = wb.SheetNames[0];
-        const ws = wb.Sheets[wsname];
-        
-        // Parse rows including headers
-        const rawRows = XLSX.utils.sheet_to_json(ws, { header: 1 }) as unknown[][];
-        if (rawRows.length === 0) {
-          setImportError("File Excel kosong.");
-          return;
-        }
-
-        const fileHeaders = rawRows[0] || [];
-        // Validate headers match
-        const headersMatch = headers.every((h, idx) => String(fileHeaders[idx] || "").trim().toLowerCase() === h.trim().toLowerCase());
-        
-        if (!headersMatch) {
-          setImportError(`Header kolom tidak sesuai template. Harus: ${headers.join(", ")}`);
-          return;
-        }
-
-        // Map data rows to objects
-        const formattedData = rawRows.slice(1).map(row => {
-          const obj: Record<string, string> = {};
-          headers.forEach((h, idx) => {
-            obj[h] = row[idx] !== undefined && row[idx] !== null ? String(row[idx]) : "";
-          });
-          return obj;
-        }).filter(item => Object.values(item).some(val => val !== ""));
-
-        if (onImportSuccess) {
-          onImportSuccess(formattedData);
-        }
-        setImportSuccess(true);
-        setTimeout(() => setImportSuccess(false), 3000);
-      } catch (err) {
-        console.error("Excel import failed:", err);
-        setImportError("Gagal membaca file Excel. Pastikan format valid.");
+    
+    try {
+      const workbook = new ExcelJS.Workbook();
+      const arrayBuffer = await file.arrayBuffer();
+      await workbook.xlsx.load(arrayBuffer);
+      
+      const ws = workbook.worksheets[0];
+      if (!ws) {
+        setImportError("File Excel kosong.");
+        return;
       }
-    };
+      
+      const fileHeaders: string[] = [];
+      const headerRow = ws.getRow(1);
+      headerRow.eachCell((cell, colNumber) => {
+        fileHeaders[colNumber - 1] = String(cell.value || "").trim();
+      });
 
-    reader.readAsBinaryString(file);
+      // Validate headers match
+      const headersMatch = headers.every((h, idx) => fileHeaders[idx]?.toLowerCase() === h.trim().toLowerCase());
+      
+      if (!headersMatch) {
+        setImportError(`Header kolom tidak sesuai template. Harus: ${headers.join(", ")}`);
+        return;
+      }
+
+      const formattedData: Record<string, string>[] = [];
+      ws.eachRow((row, rowNumber) => {
+        if (rowNumber === 1) return; // skip header
+        const obj: Record<string, string> = {};
+        let hasValue = false;
+        headers.forEach((h, idx) => {
+          const cellValue = row.getCell(idx + 1).value;
+          const val = cellValue !== undefined && cellValue !== null ? String(cellValue) : "";
+          obj[h] = val;
+          if (val.trim() !== "") hasValue = true;
+        });
+        if (hasValue) {
+          formattedData.push(obj);
+        }
+      });
+
+      if (onImportSuccess) {
+        onImportSuccess(formattedData);
+      }
+      setImportSuccess(true);
+      setTimeout(() => setImportSuccess(false), 3000);
+    } catch (err) {
+      console.error("Excel import failed:", err);
+      setImportError("Gagal membaca file Excel. Pastikan format valid.");
+    }
+
     setShowImportDropdown(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   // 3. Export data to Excel
-  const handleExportExcel = () => {
-    // Map data to headers array
-    const exportRows = data.map(item => {
-      const row: string[] = [];
-      // Attempt to map database keys to user-facing headers dynamically
+  const handleExportExcel = async () => {
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet("Data Ekspor");
+    
+    sheet.columns = headers.map(h => ({ header: h, key: h, width: 25 }));
+    sheet.getRow(1).font = { bold: true };
+    sheet.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE2E8F0' } };
+
+    data.forEach(item => {
+      const rowData: Record<string, string> = {};
       headers.forEach(h => {
         let val = "";
         const lowerH = h.toLowerCase();
@@ -199,15 +208,13 @@ export function ImportExportToolbar({
         else if (lowerH.includes("nilai")) val = String(item.score || item.averageScore || "");
         else if (lowerH.includes("kehadiran")) val = String(item.attendance || "");
         else val = String(item[h] || "");
-        row.push(val);
+        rowData[h] = val;
       });
-      return row;
+      sheet.addRow(rowData);
     });
 
-    const ws = XLSX.utils.aoa_to_sheet([headers, ...exportRows]);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Data Ekspor");
-    XLSX.writeFile(wb, `${title.replace(/\s+/g, "_").toLowerCase()}_export.xlsx`);
+    const buffer = await workbook.xlsx.writeBuffer();
+    saveAs(new Blob([buffer]), `${title.replace(/\s+/g, "_").toLowerCase()}_export.xlsx`);
     setShowExportDropdown(false);
   };
 
