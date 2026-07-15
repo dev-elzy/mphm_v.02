@@ -39,7 +39,7 @@ export default function CommandPalette() {
     const delayDebounceFn = setTimeout(async () => {
       setLoading(true);
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8787";
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://api.m.p3hm.my.id";
         // Fetch people with query
         const res = await fetch(`${apiUrl}/api/admin/people?q=${encodeURIComponent(search)}`, {
           headers: {

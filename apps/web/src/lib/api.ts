@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8787";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://api.m.p3hm.my.id";
 
 export interface ApiResponse<T = any> {
   status: string;
