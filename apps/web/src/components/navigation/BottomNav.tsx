@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
-import { NAVIGATION_CONFIG, RoleTypes } from "../../config/navigation.config";
+import { NAVIGATION_CONFIG, RoleTypes, NavItem } from "../../config/navigation.config";
 import { Database } from "lucide-react";
 
 interface CustomNavItem {
@@ -52,7 +52,14 @@ export function BottomNav({ role, forceShow = false }: { role: RoleTypes, forceS
     return () => window.removeEventListener("custom_tables_changed", loadCustomTables);
   }, [role]);
 
-  const filteredStaticItems = (NAVIGATION_CONFIG[role] || []).filter((item) => {
+  const flatStaticItems: NavItem[] = (NAVIGATION_CONFIG[role] || []).flatMap((item) => {
+    if ("items" in item) {
+      return item.items;
+    }
+    return [item];
+  });
+
+  const filteredStaticItems = flatStaticItems.filter((item) => {
     // Keep dashboard root route always visible
     const isRoot = ["/sekretariat", "/mufattisy", "/pimpinan", "/mustahiq", "/keamanan", "/guardian"].includes(item.href);
     if (isRoot) return true;

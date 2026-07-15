@@ -4,5 +4,5 @@ import { KurikulumTab } from "@/features/sekretariat/components/KurikulumTab";
 
 export default function KurikulumTabPage() {
   const { selectedYearId, isReadOnly } = useAcademicYear();
-  return <KurikulumTab selectedYearId={selectedYearId} isReadOnly={isReadOnly} />;
+  return <KurikulumTab selectedYearId={selectedYearId} isReadOnly={isReadOnly} onViewDetail={() => {}} />;
 }
