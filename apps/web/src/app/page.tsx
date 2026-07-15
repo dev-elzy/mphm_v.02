@@ -7,13 +7,17 @@ import {
   KeyRound,
   User,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  Eye,
+  EyeOff
 } from "lucide-react";
 
 export default function Page() {
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -72,7 +76,7 @@ export default function Page() {
   };
 
   return (
-    <div className="h-screen w-screen bg-slate-900 flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-hidden font-sans">
+    <div className="min-h-screen w-full bg-slate-900 flex flex-col items-center justify-center py-8 px-4 sm:px-6 relative font-sans">
       
       {/* Dynamic Background */}
       <div className="absolute inset-0 z-0">
@@ -148,7 +152,7 @@ export default function Page() {
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     placeholder="Contoh: admin_sekretariat"
-                    className="w-full pl-11 pr-4 py-3.5 bg-slate-950/50 border border-white/5 rounded-2xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all placeholder:text-slate-600 shadow-inner"
+                    className="w-full pl-11 pr-4 py-3.5 bg-slate-950/80 border border-slate-700/60 focus:border-blue-500 rounded-2xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-slate-600 shadow-inner"
                   />
                 </div>
               </div>
@@ -160,13 +164,20 @@ export default function Page() {
                     <KeyRound className="w-5 h-5" />
                   </div>
                   <input 
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••••••"
-                    className="w-full pl-11 pr-4 py-3.5 bg-slate-950/50 border border-white/5 rounded-2xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all placeholder:text-slate-600 shadow-inner"
+                    className="w-full pl-11 pr-10 py-3.5 bg-slate-950/80 border border-slate-700/60 focus:border-blue-500 rounded-2xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-slate-600 shadow-inner"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-500 hover:text-white transition-colors cursor-pointer"
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
                 </div>
               </div>
 
@@ -191,6 +202,16 @@ export default function Page() {
                   </div>
                 </button>
               </div>
+
+              <div className="mt-4 text-center">
+                <button
+                  type="button"
+                  onClick={() => setShowRegisterModal(true)}
+                  className="text-xs font-semibold text-blue-400 hover:text-blue-300 transition-colors focus:outline-none"
+                >
+                  Belum punya akun Wali Santri? Daftar di sini
+                </button>
+              </div>
             </form>
           </div>
         </div>
@@ -202,6 +223,27 @@ export default function Page() {
           </p>
         </div>
       </div>
+
+      {/* Registration Info Modal */}
+      {showRegisterModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-slate-900 border border-white/10 p-6 rounded-3xl max-w-sm w-full relative shadow-2xl animate-in zoom-in-95 duration-200 text-center">
+            <h3 className="text-lg font-bold text-white mb-2">Pendaftaran Wali Santri</h3>
+            <p className="text-xs text-slate-300 leading-relaxed mb-6">
+              Untuk menjamin keamanan data akademik santri, pembuatan akun Wali Santri dilakukan secara terpusat oleh **Sekretariat Pesantren**. 
+              <br /><br />
+              Silakan hubungi pihak Sekretariat atau admin pesantren untuk mendapatkan username dan password Anda.
+            </p>
+            <button
+              type="button"
+              onClick={() => setShowRegisterModal(false)}
+              className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-2xl transition-colors text-sm shadow-md cursor-pointer"
+            >
+              Mengerti
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

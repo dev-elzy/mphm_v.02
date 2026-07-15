@@ -2,10 +2,7 @@
 
 import { useState, useRef } from "react";
 import { Download, Upload, FileSpreadsheet, FileText, ChevronDown, Check, AlertCircle } from "lucide-react";
-import * as ExcelJS from "exceljs";
-import { saveAs } from "file-saver";
-import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
+
 
 interface ImportExportToolbarProps {
   headers: string[]; // e.g. ["Nama Lengkap", "NIK", "Nomor Stambuk", "Kelas", "Alamat"]
@@ -32,6 +29,8 @@ export function ImportExportToolbar({
 
   // 1. Download Template Excel (Header locked, comments added)
   const handleDownloadTemplate = async () => {
+    const ExcelJS = await import("exceljs");
+    const { saveAs } = await import("file-saver");
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet("Template");
 
@@ -129,6 +128,7 @@ export function ImportExportToolbar({
     const file = files[0];
     
     try {
+      const ExcelJS = await import("exceljs");
       const workbook = new ExcelJS.Workbook();
       const arrayBuffer = await file.arrayBuffer();
       await workbook.xlsx.load(arrayBuffer);
@@ -185,6 +185,8 @@ export function ImportExportToolbar({
 
   // 3. Export data to Excel
   const handleExportExcel = async () => {
+    const ExcelJS = await import("exceljs");
+    const { saveAs } = await import("file-saver");
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet("Data Ekspor");
     
@@ -219,7 +221,9 @@ export function ImportExportToolbar({
   };
 
   // 4. Export data to PDF
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
+    const { jsPDF } = await import("jspdf");
+    const { default: autoTable } = await import("jspdf-autotable");
     const doc = new jsPDF();
     doc.setFont("helvetica", "bold");
     doc.text(title, 14, 15);

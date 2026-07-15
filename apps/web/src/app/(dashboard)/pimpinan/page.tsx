@@ -1,6 +1,11 @@
 "use client";
 
-import { DashboardTab } from "@/features/sekretariat/components/DashboardTab";
+import dynamic from "next/dynamic";
+
+const DashboardTab = dynamic(
+  () => import("@/features/sekretariat/components/DashboardTab").then((mod) => mod.DashboardTab),
+  { ssr: false }
+);
 
 export default function PimpinanDashboardPage() {
   return <DashboardTab />;

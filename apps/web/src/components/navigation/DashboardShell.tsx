@@ -1,7 +1,9 @@
 "use client";
 
 import React from "react";
-import CommandPalette from "../shared/CommandPalette";
+import dynamic from "next/dynamic";
+
+const CommandPalette = dynamic(() => import("../shared/CommandPalette"), { ssr: false });
 import { Sidebar } from "./Sidebar";
 import { BottomNav } from "./BottomNav";
 import { RoleTypes } from "../../config/navigation.config";
