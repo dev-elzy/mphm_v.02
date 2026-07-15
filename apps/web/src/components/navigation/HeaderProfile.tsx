@@ -61,7 +61,8 @@ export function HeaderProfile() {
     setUploadFeedback("Mengompres & mengunggah berkas...");
 
     try {
-      const sigRes = await apiRequest<{ signature: string; timestamp: number; cloudName: string; apiKey: string; folder?: string }>("/api/media/signature");
+      const res = await apiRequest<{ status: string; data: { signature: string; timestamp: number; cloudName: string; apiKey: string; folder?: string } }>("/api/media/signature");
+      const sigRes = res.data;
       
       if (sigRes && sigRes.signature) {
         const formData = new FormData();
