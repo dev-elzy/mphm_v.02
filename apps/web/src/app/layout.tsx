@@ -8,6 +8,8 @@ const inter = Inter({
   variable: "--font-inter",
 });
 
+export const runtime = "edge";
+
 export const metadata: Metadata = {
   title: "MPHM Enterprise v4.0",
   description: "Pesantren Management System",
