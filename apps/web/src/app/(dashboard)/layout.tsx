@@ -8,12 +8,12 @@ import { DashboardShell } from "../../components/navigation/DashboardShell";
 
 // Mapping dari role backend ke role key frontend dan base path dashboard
 const ROLE_MAP: Record<string, { key: RoleTypes; basePath: string }> = {
-  sekretariat:      { key: "sekretariat", basePath: "/sekretariat" },
-  mufattisy:        { key: "mufattisy",   basePath: "/mufattisy" },
-  mundzir:          { key: "mundzir",     basePath: "/pimpinan" },
-  mustahiq:         { key: "mustahiq",    basePath: "/mustahiq" },
-  "petugas keamanan": { key: "keamanan",  basePath: "/keamanan" },
-  "wali santri":    { key: "wali_santri", basePath: "/guardian" },
+  sekretariat:        { key: "sekretariat", basePath: "/sekretariat" },
+  mufattisy:          { key: "mufattisy",   basePath: "/mufattisy" },
+  mundzir:            { key: "mundzir",     basePath: "/pimpinan" },
+  mustahiq:           { key: "mustahiq",    basePath: "/mustahiq" },
+  "petugas keamanan": { key: "keamanan",    basePath: "/keamanan" },
+  "wali santri":      { key: "wali_santri", basePath: "/guardian" },
 };
 
 // Semua base path dashboard yang valid
@@ -31,24 +31,17 @@ export default function DashboardLayout({
   // Tentukan role & base path user
   const backendRole = user ? String(user.role).trim().toLowerCase() : null;
   const roleInfo = backendRole ? ROLE_MAP[backendRole] : null;
-  const role: RoleTypes = roleInfo?.key ?? "mufattisy";
-  const correctBasePath = roleInfo?.basePath ?? "/mufattisy";
+  const role: RoleTypes = roleInfo?.key ?? "sekretariat";
+  const correctBasePath = roleInfo?.basePath ?? "/sekretariat";
 
   useEffect(() => {
-    if (isLoading) return; // Masih loading, jangan redirect
+    // Jangan redirect saat masih loading atau user belum ter-resolve
+    if (isLoading || !user) return;
 
-    // 1. Belum login → redirect ke halaman login
-    if (!user) {
-      router.replace("/");
-      return;
-    }
-
-    // 2. User mengakses dashboard yang bukan milik role-nya → redirect ke dashboard yang benar
-    //    Cek: apakah pathname saat ini dimulai dari base path role lain?
+    // User mengakses dashboard yang bukan milik role-nya → redirect ke dashboard yang benar
     const isOnCorrectPath = pathname === correctBasePath || pathname.startsWith(correctBasePath + "/");
 
     if (!isOnCorrectPath) {
-      // User ada di path dashboard yang salah, redirect ke dashboard yang benar
       const isOnAnyDashboard = ALL_DASHBOARD_PATHS.some(
         (p) => pathname === p || pathname.startsWith(p + "/")
       );
@@ -70,21 +63,10 @@ export default function DashboardLayout({
     );
   }
 
-  // Jika belum login, tampilkan loading sementara redirect berjalan
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-zinc-950 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
-          <span className="text-sm font-semibold text-zinc-500 dark:text-zinc-400 animate-pulse">Mengalihkan...</span>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <DashboardShell role={role}>
       {children}
     </DashboardShell>
   );
 }
+
