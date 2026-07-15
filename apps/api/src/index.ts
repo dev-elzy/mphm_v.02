@@ -47,7 +47,8 @@ const app = new Hono<AppEnv>()
 app.use('*', cors({
   origin: (origin) => {
     if (!origin) return 'https://m.p3hm.my.id';
-    if (origin === 'https://m.p3hm.my.id' || origin === 'http://localhost:3000' || origin.endsWith('.vercel.app')) {
+    // Hanya izinkan domain utama dan localhost
+    if (origin === 'https://m.p3hm.my.id' || origin === 'http://localhost:3000') {
       return origin;
     }
     return 'https://m.p3hm.my.id';
