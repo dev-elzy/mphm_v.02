@@ -62,7 +62,7 @@ media.delete("/", async (c) => {
   });
 
   if (success) {
-    return c.json({ status: "Success", message: "Foto berhasil dihapus dari Cloudinary." });
+    return c.json({ status: "Success", message: "Foto berhasil dihapus di server." });
   } else {
     return c.json({ status: "Error", message: "Gagal menghapus foto." }, 500);
   }

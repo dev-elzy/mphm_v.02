@@ -1,6 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSystemSettings } from "@/components/providers/SystemSettingsProvider";
+import { useMutation } from "@tanstack/react-query";
+import { useToast } from "@/components/shared/ToastContext";
 import { motion } from "framer-motion";
 import { Users, Lock, Settings, CheckCircle2, Database, Sliders, MapPin, Calculator, Briefcase, Plus, X, AlertCircle } from "lucide-react";
 import { PillBadge } from "@/components/shared/PillBadge";
@@ -66,6 +69,34 @@ const ROLE_DEFAULT_MENUS_MAP: Record<RoleTypes, Array<{ label: string; href: str
 };
 
 export function SystemSettingsCockpit() {
+  const { settings, refetchSettings } = useSystemSettings();
+  const { showToast } = useToast();
+  
+  const updateSettingsMutation = useMutation({
+    mutationFn: async (payload: any) => {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://api.m.p3hm.my.id";
+      const res = await fetch(`${apiUrl}/api/settings`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token") || ""}`
+        },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error("Failed to save settings");
+      return res.json();
+    },
+    onSuccess: () => {
+      refetchSettings();
+      setSettingsSaved(true);
+      setTimeout(() => setSettingsSaved(false), 3000);
+      showToast("Berhasil", "Pengaturan sistem berhasil diperbarui di server.", "success");
+    },
+    onError: () => {
+      showToast("Gagal", "Gagal menyimpan pengaturan ke server. Silakan coba lagi.", "error");
+    }
+  });
+
   // Cockpit Settings States
   const [settingsTab, setSettingsTab] = useState("visibility");
   const [showMustahiqScores, setShowMustahiqScores] = useState(() => {
@@ -184,6 +215,36 @@ export function SystemSettingsCockpit() {
   });
   
   const [settingsSaved, setSettingsSaved] = useState(false);
+
+  // Sync DB settings to local state on mount
+  useEffect(() => {
+    if (Object.keys(settings).length > 0) {
+      if (settings.showMustahiqScores !== undefined) setShowMustahiqScores(settings.showMustahiqScores === "true" || settings.showMustahiqScores === true);
+      if (settings.showMustahiqAttendance !== undefined) setShowMustahiqAttendance(settings.showMustahiqAttendance === "true" || settings.showMustahiqAttendance === true);
+      if (settings.showGuardianScores !== undefined) setShowGuardianScores(settings.showGuardianScores === "true" || settings.showGuardianScores === true);
+      if (settings.showGuardianDiscipline !== undefined) setShowGuardianDiscipline(settings.showGuardianDiscipline === "true" || settings.showGuardianDiscipline === true);
+      if (settings.showKeamananLookup !== undefined) setShowKeamananLookup(settings.showKeamananLookup === "true" || settings.showKeamananLookup === true);
+      
+      if (settings.allowMustahiqAkhlaqOverride !== undefined) setAllowMustahiqAkhlaqOverride(settings.allowMustahiqAkhlaqOverride === "true" || settings.allowMustahiqAkhlaqOverride === true);
+      if (settings.allowGuardianPermits !== undefined) setAllowGuardianPermits(settings.allowGuardianPermits === "true" || settings.allowGuardianPermits === true);
+      if (settings.allowMufattisyApproval !== undefined) setAllowMufattisyApproval(settings.allowMufattisyApproval === "true" || settings.allowMufattisyApproval === true);
+      if (settings.allowKeamananEscalation !== undefined) setAllowKeamananEscalation(settings.allowKeamananEscalation === "true" || settings.allowKeamananEscalation === true);
+      
+      if (settings.systemMaintenance !== undefined) setSystemMaintenance(settings.systemMaintenance === "true" || settings.systemMaintenance === true);
+      if (settings.enforceHttps !== undefined) setEnforceHttps(settings.enforceHttps === "true" || settings.enforceHttps === true);
+      if (settings.ssoActive !== undefined) setSsoActive(settings.ssoActive === "true" || settings.ssoActive === true);
+      
+      if (settings.cookieLifetime !== undefined) setCookieLifetime(Number(settings.cookieLifetime));
+      if (settings.whatsappContact !== undefined) setWhatsappContact(settings.whatsappContact);
+      if (settings.regionApiSource !== undefined) setRegionApiSource(settings.regionApiSource);
+      if (settings.binderbyteApiKey !== undefined) setBinderbyteApiKey(settings.binderbyteApiKey);
+      
+      if (settings.system_role_ui_configs) setRoleConfigs(settings.system_role_ui_configs);
+      if (settings.job_titles_mundzir) setMundzirTitles(settings.job_titles_mundzir);
+      if (settings.job_titles_pengurus) setPengurusTitles(settings.job_titles_pengurus);
+    }
+  }, [settings]);
+
 
   // Job Titles State
   const [mundzirTitles, setMundzirTitles] = useState<string[]>(() => {
@@ -439,6 +500,30 @@ export function SystemSettingsCockpit() {
     }
   };
   const handleSaveSettings = () => {
+    const payload = {
+      showMustahiqScores,
+      showMustahiqAttendance,
+      showGuardianScores,
+      showGuardianDiscipline,
+      showKeamananLookup,
+      allowMustahiqAkhlaqOverride,
+      allowGuardianPermits,
+      allowMufattisyApproval,
+      allowKeamananEscalation,
+      systemMaintenance,
+      enforceHttps,
+      ssoActive,
+      cookieLifetime,
+      whatsappContact,
+      system_role_ui_configs: roleConfigs,
+      regionApiSource,
+      binderbyteApiKey,
+      job_titles_mundzir: mundzirTitles,
+      job_titles_pengurus: pengurusTitles
+    };
+    
+    updateSettingsMutation.mutate(payload);
+
     if (typeof window !== "undefined") {
       localStorage.setItem("showMustahiqScores", String(showMustahiqScores));
       localStorage.setItem("showMustahiqAttendance", String(showMustahiqAttendance));
@@ -466,8 +551,6 @@ export function SystemSettingsCockpit() {
       window.dispatchEvent(new Event("region_settings_changed"));
       window.dispatchEvent(new Event("job_titles_changed"));
     }
-    setSettingsSaved(true);
-    setTimeout(() => setSettingsSaved(false), 3000);
   };
 
   return (

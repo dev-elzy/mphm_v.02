@@ -61,7 +61,7 @@ export function HeaderProfile() {
     setUploadFeedback("Mengompres & mengunggah berkas...");
 
     try {
-      const sigRes = await apiRequest<{ signature: string; timestamp: number; cloudName: string; apiKey: string }>("/api/media/signature");
+      const sigRes = await apiRequest<{ signature: string; timestamp: number; cloudName: string; apiKey: string; folder?: string }>("/api/media/signature");
       
       if (sigRes && sigRes.signature) {
         const formData = new FormData();
@@ -69,6 +69,9 @@ export function HeaderProfile() {
         formData.append("api_key", sigRes.apiKey);
         formData.append("timestamp", String(sigRes.timestamp));
         formData.append("signature", sigRes.signature);
+        if (sigRes.folder) {
+          formData.append("folder", sigRes.folder);
+        }
 
         const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${sigRes.cloudName}/image/upload`, {
           method: "POST",
@@ -88,7 +91,7 @@ export function HeaderProfile() {
       }
     } catch (err: any) {
       console.error("Cloudinary upload error:", err);
-      toast("Gagal mengunggah foto ke server. Pastikan pengaturan Cloudinary sudah benar.", "error", "Unggah Gagal");
+      toast("Gagal mengunggah foto ke server. Silahkan hubungi developer.", "error", "Unggah Gagal");
       setUploadFeedback("Upload gagal. Silakan coba lagi.");
     } finally {
       setUploadingImage(false);

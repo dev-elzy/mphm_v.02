@@ -186,7 +186,7 @@ export function AlumniTab({ onViewDetail, isReadOnly = false, selectedYearId }: 
       }
     } catch (err: any) {
       console.error("Cloudinary upload error:", err);
-      toast("Gagal mengunggah foto ke server. Pastikan pengaturan Cloudinary sudah benar.", "error", "Unggah Gagal");
+      toast("Gagal mengunggah foto ke server. Silahkan hubungi developer.", "error", "Unggah Gagal");
       setUploadFeedback("Upload gagal. Silakan coba lagi.");
     } finally {
       setUploadingImage(false);

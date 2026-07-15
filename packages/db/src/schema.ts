@@ -6,3 +6,4 @@ export * from "./schema/academic_ops";
 export * from "./schema/auth";
 export * from "./schema/attendance";
 export * from "./schema/disciplinary_master";
+export * from "./schema/settings";

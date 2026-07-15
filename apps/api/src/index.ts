@@ -9,6 +9,7 @@ import assessmentEngine from './routes/assessmentEngine'
 import disciplinaryEngine from './routes/disciplinaryEngine'
 import promotionEngine from './routes/promotionEngine'
 import authRoutes from './routes/auth'
+import settingsRoute from './routes/settings'
 
 // Admin route imports
 import peopleAdmin from './routes/admin/people'
@@ -78,6 +79,9 @@ app.get('/', (c) => {
 
 // Auth routes (login/logout/me) — Sebagian public, sebagian protected
 app.route('/api/auth', authRoutes)
+
+// Settings route - GET is public, PUT is protected inside the route itself
+app.route('/api/settings', settingsRoute)
 
 // ============================================================
 // PROTECTED ROUTES (Semua memerlukan auth)
