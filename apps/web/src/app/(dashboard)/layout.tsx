@@ -26,13 +26,13 @@ export default function DashboardLayout({
   let role: RoleTypes = "mufattisy"; 
 
   if (user) {
-    const backendRole = user.role;
-    if (backendRole === "Sekretariat") role = "sekretariat";
-    else if (backendRole === "Mufattisy") role = "mufattisy";
-    else if (backendRole === "Mundzir") role = "mundzir";
-    else if (backendRole === "Mustahiq") role = "mustahiq";
-    else if (backendRole === "Petugas Keamanan") role = "keamanan";
-    else if (backendRole === "Wali Santri") role = "wali_santri";
+    const backendRole = String(user.role).trim().toLowerCase();
+    if (backendRole === "sekretariat") role = "sekretariat";
+    else if (backendRole === "mufattisy") role = "mufattisy";
+    else if (backendRole === "mundzir") role = "mundzir";
+    else if (backendRole === "mustahiq") role = "mustahiq";
+    else if (backendRole === "petugas keamanan") role = "keamanan";
+    else if (backendRole === "wali santri") role = "wali_santri";
   }
 
   return (
