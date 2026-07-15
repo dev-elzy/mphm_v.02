@@ -124,8 +124,8 @@ export default function Page() {
       <div className="max-w-[420px] w-full z-10 flex flex-col items-center">
         
         {/* Header / Logo */}
-        <div className="mb-4 sm:mb-6 text-center flex flex-col items-center">
-          <div className="relative w-16 h-16 sm:w-20 sm:h-20 mb-2 sm:mb-4 shadow-2xl rounded-full bg-white/5 p-2 sm:p-3 border border-white/10 backdrop-blur-md">
+        <div className="mb-2 sm:mb-4 lg:mb-6 text-center flex flex-col items-center">
+          <div className="relative w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 mb-2 sm:mb-3 shadow-2xl rounded-full bg-white/5 p-2 sm:p-3 border border-white/10 backdrop-blur-md">
             {/* Fallback shadow block to give 3D floating effect */}
             <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-xl -z-10 animate-pulse"></div>
             <img 
@@ -142,11 +142,11 @@ export default function Page() {
             Portal Resmi
           </div>
           
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-transparent bg-clip-text bg-linear-to-b from-white to-white/70 tracking-tight drop-shadow-sm mb-1">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-transparent bg-clip-text bg-linear-to-b from-white to-white/70 tracking-tight drop-shadow-sm mb-1">
             MPHM LIRBOYO
           </h1>
           
-          <p className="text-blue-100/80 text-xs sm:text-sm font-medium tracking-wide">
+          <p className="text-blue-100/80 text-[10px] sm:text-xs lg:text-sm font-medium tracking-wide">
             Sistem Informasi Managament Akademik
           </p>
         </div>
@@ -156,33 +156,33 @@ export default function Page() {
           {/* Card outer glow */}
           <div className="absolute -inset-0.5 bg-linear-to-r from-blue-500 to-indigo-500 rounded-3xl blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
           
-          <div className="relative w-full bg-slate-900/80 backdrop-blur-2xl border border-white/10 rounded-3xl p-4 sm:p-6 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] transform transition-transform duration-300 hover:scale-[1.01]">
+          <div className="relative w-full bg-slate-900/80 backdrop-blur-2xl border border-white/10 rounded-3xl p-3 sm:p-5 lg:p-6 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] transform transition-transform duration-300 hover:scale-[1.01]">
             
             <div className="absolute top-0 inset-x-0 h-px bg-linear-to-r from-transparent via-white/20 to-transparent"></div>
             
-            <div className="text-center mb-4 sm:mb-6">
-              <h2 className="text-lg sm:text-xl font-bold text-white mb-1">
+            <div className="text-center mb-3 sm:mb-5">
+              <h2 className="text-base sm:text-lg lg:text-xl font-bold text-white mb-0.5">
                 {viewMode === "login" ? "Masuk Akun" : "Daftar Wali Santri"}
               </h2>
-              <p className="text-xs text-slate-400">
+              <p className="text-[10px] sm:text-xs text-slate-400">
                 {viewMode === "login" ? "Silakan masukkan kredensial Anda" : "Masukkan Nomor WhatsApp dan KK"}
               </p>
             </div>
 
             {error && (
-              <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-start gap-3 text-red-400 text-xs sm:text-sm animate-in fade-in slide-in-from-top-2">
+              <div className="mb-3 sm:mb-5 p-2 sm:p-3 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-start gap-2 text-red-400 text-[10px] sm:text-xs lg:text-sm animate-in fade-in slide-in-from-top-2">
                 <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
                 <span className="leading-relaxed">{error}</span>
               </div>
             )}
 
             {viewMode === "login" ? (
-              <form onSubmit={handleLoginSubmit} className="space-y-3 sm:space-y-5">
-                <div className="space-y-1.5 sm:space-y-2">
-                  <label className="text-xs font-bold text-slate-300 uppercase tracking-wider ml-1">Username</label>
+              <form onSubmit={handleLoginSubmit} className="space-y-2 sm:space-y-4">
+                <div className="space-y-1 sm:space-y-1.5">
+                  <label className="text-[10px] sm:text-xs font-bold text-slate-300 uppercase tracking-wider ml-1">Username</label>
                   <div className="relative group/input">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-500 group-focus-within/input:text-blue-400 transition-colors">
-                      <User className="w-5 h-5" />
+                    <div className="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none text-slate-500 group-focus-within/input:text-blue-400 transition-colors">
+                      <User className="w-4 h-4 sm:w-5 sm:h-5" />
                     </div>
                     <input 
                       type="text"
@@ -190,16 +190,16 @@ export default function Page() {
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       placeholder="Contoh: admin_sekretariat"
-                      className="w-full pl-11 pr-4 py-2.5 sm:py-3.5 bg-slate-950/80 border border-slate-700/60 focus:border-blue-500 rounded-2xl text-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-slate-600 shadow-inner"
+                      className="w-full pl-9 sm:pl-11 pr-4 py-2 sm:py-3 bg-slate-950/80 border border-slate-700/60 focus:border-blue-500 rounded-xl sm:rounded-2xl text-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-slate-600 shadow-inner"
                     />
                   </div>
                 </div>
 
-                <div className="space-y-1.5 sm:space-y-2">
-                  <label className="text-xs font-bold text-slate-300 uppercase tracking-wider ml-1">Password</label>
+                <div className="space-y-1 sm:space-y-1.5">
+                  <label className="text-[10px] sm:text-xs font-bold text-slate-300 uppercase tracking-wider ml-1">Password</label>
                   <div className="relative group/input">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-500 group-focus-within/input:text-blue-400 transition-colors">
-                      <KeyRound className="w-5 h-5" />
+                    <div className="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none text-slate-500 group-focus-within/input:text-blue-400 transition-colors">
+                      <KeyRound className="w-4 h-4 sm:w-5 sm:h-5" />
                     </div>
                     <input 
                       type={showPassword ? "text" : "password"}
@@ -207,46 +207,46 @@ export default function Page() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••••••"
-                      className="w-full pl-11 pr-10 py-2.5 sm:py-3.5 bg-slate-950/80 border border-slate-700/60 focus:border-blue-500 rounded-2xl text-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-slate-600 shadow-inner"
+                      className="w-full pl-9 sm:pl-11 pr-10 py-2 sm:py-3 bg-slate-950/80 border border-slate-700/60 focus:border-blue-500 rounded-xl sm:rounded-2xl text-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-slate-600 shadow-inner"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-500 hover:text-white transition-colors cursor-pointer"
+                      className="absolute inset-y-0 right-0 pr-3 sm:pr-4 flex items-center text-slate-500 hover:text-white transition-colors cursor-pointer"
                     >
-                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                      {showPassword ? <EyeOff className="w-4 h-4 sm:w-5 sm:h-5" /> : <Eye className="w-4 h-4 sm:w-5 sm:h-5" />}
                     </button>
                   </div>
                 </div>
 
-                <div className="pt-2 flex gap-3">
+                <div className="pt-1.5 sm:pt-2 flex gap-2 sm:gap-3">
                   <button
                     type="submit"
                     disabled={loading}
-                    className="relative flex-1 overflow-hidden group/btn rounded-2xl p-px disabled:opacity-70 disabled:cursor-not-allowed"
+                    className="relative flex-1 overflow-hidden group/btn rounded-xl sm:rounded-2xl p-px disabled:opacity-70 disabled:cursor-not-allowed"
                   >
                     <span className="absolute inset-0 bg-linear-to-r from-blue-600 via-indigo-600 to-blue-600 opacity-80 group-hover/btn:opacity-100 transition-opacity duration-300"></span>
-                    <div className="relative bg-linear-to-b from-white/10 to-transparent flex items-center justify-center gap-2 py-3 sm:py-4 px-4 rounded-2xl text-white text-sm sm:text-base font-bold tracking-wide shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)] transition-transform active:scale-[0.98]">
-                      {loading ? <Loader2 className="w-5 h-5 animate-spin text-blue-200" /> : <span>Masuk</span>}
+                    <div className="relative bg-linear-to-b from-white/10 to-transparent flex items-center justify-center gap-2 py-2 sm:py-3 px-3 sm:px-4 rounded-xl sm:rounded-2xl text-white text-xs sm:text-sm lg:text-base font-bold tracking-wide shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)] transition-transform active:scale-[0.98]">
+                      {loading ? <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin text-blue-200" /> : <span>Masuk</span>}
                     </div>
                   </button>
                   <button
                     type="button"
                     onClick={() => { setViewMode("register"); setError(null); }}
                     disabled={loading}
-                    className="relative flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-2xl flex items-center justify-center text-white text-sm sm:text-base font-bold tracking-wide transition-colors disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
+                    className="relative flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl sm:rounded-2xl flex items-center justify-center text-white text-xs sm:text-sm lg:text-base font-bold tracking-wide transition-colors disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
                   >
                     Daftar
                   </button>
                 </div>
               </form>
             ) : (
-              <form onSubmit={handleRegisterSubmit} className="space-y-3 sm:space-y-5">
-                <div className="space-y-1.5 sm:space-y-2">
-                  <label className="text-xs font-bold text-slate-300 uppercase tracking-wider ml-1">Nomor WhatsApp</label>
+              <form onSubmit={handleRegisterSubmit} className="space-y-2 sm:space-y-4">
+                <div className="space-y-1 sm:space-y-1.5">
+                  <label className="text-[10px] sm:text-xs font-bold text-slate-300 uppercase tracking-wider ml-1">Nomor WhatsApp</label>
                   <div className="relative group/input">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-500 group-focus-within/input:text-blue-400 transition-colors">
-                      <User className="w-5 h-5" />
+                    <div className="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none text-slate-500 group-focus-within/input:text-blue-400 transition-colors">
+                      <User className="w-4 h-4 sm:w-5 sm:h-5" />
                     </div>
                     <input 
                       type="text"
@@ -254,16 +254,16 @@ export default function Page() {
                       value={regWhatsapp}
                       onChange={(e) => setRegWhatsapp(e.target.value)}
                       placeholder="Cth: 08123456789"
-                      className="w-full pl-11 pr-4 py-2.5 sm:py-3.5 bg-slate-950/80 border border-slate-700/60 focus:border-blue-500 rounded-2xl text-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-slate-600 shadow-inner"
+                      className="w-full pl-9 sm:pl-11 pr-4 py-2 sm:py-3 bg-slate-950/80 border border-slate-700/60 focus:border-blue-500 rounded-xl sm:rounded-2xl text-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-slate-600 shadow-inner"
                     />
                   </div>
                 </div>
 
-                <div className="space-y-1.5 sm:space-y-2">
-                  <label className="text-xs font-bold text-slate-300 uppercase tracking-wider ml-1">Nomor KK (Kartu Keluarga)</label>
+                <div className="space-y-1 sm:space-y-1.5">
+                  <label className="text-[10px] sm:text-xs font-bold text-slate-300 uppercase tracking-wider ml-1">Nomor KK (Kartu Keluarga)</label>
                   <div className="relative group/input">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-500 group-focus-within/input:text-blue-400 transition-colors">
-                      <KeyRound className="w-5 h-5" />
+                    <div className="absolute inset-y-0 left-0 pl-3 sm:pl-4 flex items-center pointer-events-none text-slate-500 group-focus-within/input:text-blue-400 transition-colors">
+                      <KeyRound className="w-4 h-4 sm:w-5 sm:h-5" />
                     </div>
                     <input 
                       type="text"
@@ -271,27 +271,27 @@ export default function Page() {
                       value={regKk}
                       onChange={(e) => setRegKk(e.target.value)}
                       placeholder="Masukkan digit Nomor KK"
-                      className="w-full pl-11 pr-4 py-2.5 sm:py-3.5 bg-slate-950/80 border border-slate-700/60 focus:border-blue-500 rounded-2xl text-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-slate-600 shadow-inner"
+                      className="w-full pl-9 sm:pl-11 pr-4 py-2 sm:py-3 bg-slate-950/80 border border-slate-700/60 focus:border-blue-500 rounded-xl sm:rounded-2xl text-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all placeholder:text-slate-600 shadow-inner"
                     />
                   </div>
                 </div>
 
-                <div className="pt-2 flex gap-3">
+                <div className="pt-1.5 sm:pt-2 flex gap-2 sm:gap-3">
                   <button
                     type="submit"
                     disabled={loading}
-                    className="relative flex-1 overflow-hidden group/btn rounded-2xl p-px disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
+                    className="relative flex-1 overflow-hidden group/btn rounded-xl sm:rounded-2xl p-px disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
                   >
                     <span className="absolute inset-0 bg-linear-to-r from-blue-600 via-indigo-600 to-blue-600 opacity-80 group-hover/btn:opacity-100 transition-opacity duration-300"></span>
-                    <div className="relative bg-linear-to-b from-white/10 to-transparent flex items-center justify-center gap-2 py-3 sm:py-4 px-4 rounded-2xl text-white text-sm sm:text-base font-bold tracking-wide shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)] transition-transform active:scale-[0.98]">
-                      {loading ? <Loader2 className="w-5 h-5 animate-spin text-blue-200" /> : <span>Daftar</span>}
+                    <div className="relative bg-linear-to-b from-white/10 to-transparent flex items-center justify-center gap-2 py-2 sm:py-3 px-3 sm:px-4 rounded-xl sm:rounded-2xl text-white text-xs sm:text-sm lg:text-base font-bold tracking-wide shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)] transition-transform active:scale-[0.98]">
+                      {loading ? <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin text-blue-200" /> : <span>Daftar</span>}
                     </div>
                   </button>
                   <button
                     type="button"
                     onClick={() => { setViewMode("login"); setError(null); }}
                     disabled={loading}
-                    className="relative flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-2xl flex items-center justify-center text-white text-sm sm:text-base font-bold tracking-wide transition-colors disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
+                    className="relative flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl sm:rounded-2xl flex items-center justify-center text-white text-xs sm:text-sm lg:text-base font-bold tracking-wide transition-colors disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
                   >
                     Batal
                   </button>
@@ -302,7 +302,7 @@ export default function Page() {
         </div>
 
         {/* Footer Text */}
-        <div className="mt-6 sm:mt-12 text-center">
+        <div className="mt-3 sm:mt-6 text-center">
           <p className="text-[10px] sm:text-xs font-medium text-slate-500 uppercase tracking-widest">
             MPHM Enterprise &bull; Basis Database Terpadu
           </p>

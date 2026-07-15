@@ -10,8 +10,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "../../lib/api";
 import { useToast } from "../shared/ToastContext";
 import { createPortal } from "react-dom";
-import { CldImage } from 'next-cloudinary';
-
 export function HeaderProfile() {
   const { data: user, isLoading } = useAuth();
   const logoutMutation = useLogout();
@@ -83,6 +81,14 @@ export function HeaderProfile() {
         
         const uploadData = await uploadRes.json();
         if (uploadData.secure_url) {
+          // Prevent pile-up: delete the old preview if it's different from the saved DB avatar
+          if (avatarUrl && avatarUrl !== user?.avatarUrl) {
+            apiRequest("/api/media", {
+              method: "DELETE",
+              body: JSON.stringify({ url: avatarUrl })
+            }).catch(e => console.error("Failed to cleanup old preview", e));
+          }
+
           setAvatarUrl(uploadData.secure_url);
           setUploadFeedback("Foto profil berhasil diunggah!");
           toast("Foto profil berhasil diunggah!", "success", "Berhasil");
@@ -179,11 +185,9 @@ export function HeaderProfile() {
         className="flex items-center gap-2 hover:opacity-85 transition-opacity duration-150 cursor-pointer focus:outline-none"
       >
         {user?.avatarUrl ? (
-          <CldImage 
+          <img 
             src={user.avatarUrl} 
             alt={name} 
-            width={36}
-            height={36}
             className="w-9 h-9 rounded-full object-cover border border-zinc-200 dark:border-zinc-800"
           />
         ) : (
@@ -267,7 +271,12 @@ export function HeaderProfile() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                onClick={() => setShowSettingsModal(false)}
+                onClick={() => {
+                  if (avatarUrl && avatarUrl !== user?.avatarUrl) {
+                    apiRequest("/api/media", { method: "DELETE", body: JSON.stringify({ url: avatarUrl }) }).catch(() => {});
+                  }
+                  setShowSettingsModal(false);
+                }}
                 className="fixed inset-0 bg-black/50 backdrop-blur-md"
               />
 
@@ -289,7 +298,12 @@ export function HeaderProfile() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => setShowSettingsModal(false)}
+                    onClick={() => {
+                      if (avatarUrl && avatarUrl !== user?.avatarUrl) {
+                        apiRequest("/api/media", { method: "DELETE", body: JSON.stringify({ url: avatarUrl }) }).catch(() => {});
+                      }
+                      setShowSettingsModal(false);
+                    }}
                     className="p-1.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors text-zinc-500 cursor-pointer"
                   >
                     <X className="w-5 h-5" />
@@ -306,11 +320,9 @@ export function HeaderProfile() {
                     <div className="flex flex-col sm:flex-row items-center gap-5 p-4 bg-zinc-50 dark:bg-zinc-800/10 border border-zinc-200 dark:border-zinc-800 rounded-2xl">
                       <div className="relative shrink-0 w-20 h-20 rounded-full overflow-hidden border border-zinc-200 dark:border-zinc-750 bg-white dark:bg-zinc-900 flex items-center justify-center group shadow-inner">
                         {avatarUrl ? (
-                          <CldImage 
+                          <img 
                             src={avatarUrl} 
                             alt="Preview Avatar" 
-                            width={80}
-                            height={80}
                             className="w-full h-full object-cover" 
                           />
                         ) : (
