@@ -45,4 +45,27 @@ media.get("/signature", async (c) => {
   });
 });
 
+import { deleteFromCloudinary } from "../utils/cloudinary";
+
+// Hapus foto secara manual (jika user cancel/hapus preview dari UI)
+media.delete("/", async (c) => {
+  const { url } = await c.req.json<{ url: string }>();
+
+  if (!url) {
+    return c.json({ status: "Error", message: "URL gambar tidak diberikan." }, 400);
+  }
+
+  const success = await deleteFromCloudinary(url, {
+    CLOUDINARY_CLOUD_NAME: c.env.CLOUDINARY_CLOUD_NAME,
+    CLOUDINARY_API_KEY: c.env.CLOUDINARY_API_KEY,
+    CLOUDINARY_API_SECRET: c.env.CLOUDINARY_API_SECRET,
+  });
+
+  if (success) {
+    return c.json({ status: "Success", message: "Foto berhasil dihapus dari Cloudinary." });
+  } else {
+    return c.json({ status: "Error", message: "Gagal menghapus foto." }, 500);
+  }
+});
+
 export default media;

@@ -184,15 +184,10 @@ export function AlumniTab({ onViewDetail, isReadOnly = false, selectedYearId }: 
       } else {
         throw new Error("Invalid signature response");
       }
-    } catch (err) {
-      console.warn("Cloudinary upload error, using local base64 fallback simulation", err);
-      // Fallback lokal: Gunakan upload dengan menampilkan representasi gambar base64
-      const reader = new FileReader();
-      reader.onload = () => {
-        setAvatarUrl(reader.result as string);
-        setUploadFeedback("Fallback: Foto dimuat secara luring (offline fallback).");
-      };
-      reader.readAsDataURL(file);
+    } catch (err: any) {
+      console.error("Cloudinary upload error:", err);
+      toast("Gagal mengunggah foto ke server. Pastikan pengaturan Cloudinary sudah benar.", "error", "Unggah Gagal");
+      setUploadFeedback("Upload gagal. Silakan coba lagi.");
     } finally {
       setUploadingImage(false);
     }

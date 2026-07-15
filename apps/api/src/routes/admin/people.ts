@@ -3,6 +3,7 @@ import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { createDb, academicYears, people, studentProfiles, teacherProfiles, guardianProfiles, organizationMemberships, alumniRecords, userAccounts } from "@mphm/db";
 import { PeopleService } from "../../services/people.service";
+import { deleteFromCloudinary } from "../../utils/cloudinary";
 import type { AppEnv } from "../../types";
 import { requireRole } from "../../middlewares/rbacMiddleware";
 import { sql, eq, isNull, and } from "drizzle-orm";
@@ -188,6 +189,8 @@ peopleAdmin.put("/:id", zValidator("json", createPersonSchema.partial()), async 
   // We need to map camelCase to snake_case or whatever format updatePerson accepts
   // In people.service.ts, the updatePerson accepts Partial<typeof people.$inferInsert>
   // Let's make sure updatePerson works correctly. We map the variables:
+  const oldPerson = await db.select({ avatarUrl: people.avatarUrl }).from(people).where(eq(people.id, id)).get();
+
   const updateData: any = {};
   if (data.nik !== undefined) updateData.nik = data.nik;
   if (data.fullName !== undefined) updateData.fullName = data.fullName;
@@ -202,6 +205,15 @@ peopleAdmin.put("/:id", zValidator("json", createPersonSchema.partial()), async 
   if (!person) {
     return c.json({ status: "Error", message: "Data orang tidak ditemukan." }, 404);
   }
+
+  // Jika avatar diubah atau dihapus, hancurkan foto lama di Cloudinary secara async
+  if (oldPerson && oldPerson.avatarUrl && data.avatarUrl !== undefined && data.avatarUrl !== oldPerson.avatarUrl) {
+    const p = deleteFromCloudinary(oldPerson.avatarUrl, c.env).catch(console.error);
+    if (c.executionCtx?.waitUntil) {
+      c.executionCtx.waitUntil(p);
+    }
+  }
+
   return c.json({ status: "Success", message: "Profil berhasil diperbarui.", data: person });
 });
 
@@ -306,10 +318,26 @@ peopleAdmin.delete("/cleanup/recycle-bin", async (c) => {
   await db.delete(alumniRecords).where(sql`deleted_at < ${threshold}`);
   await db.delete(userAccounts).where(sql`deleted_at < ${threshold}`);
   
-  // Terakhir, hapus main person
+  // Ambil daftar URL avatar orang-orang yang akan dihapus permanen
+  const deletedPeople = await db.select({ avatarUrl: people.avatarUrl })
+    .from(people)
+    .where(sql`deleted_at < ${threshold}`);
+
+  // Eksekusi penghapusan di database
   await db.delete(people).where(sql`deleted_at < ${threshold}`);
 
-  return c.json({ status: "Success", message: "Recycle bin berhasil dibersihkan." });
+  // Hapus semua gambar dari Cloudinary di background
+  if (deletedPeople.length > 0) {
+    const promises = deletedPeople
+      .filter((p) => p.avatarUrl)
+      .map((p) => deleteFromCloudinary(p.avatarUrl as string, c.env).catch(console.error));
+    
+    if (promises.length > 0 && c.executionCtx?.waitUntil) {
+      c.executionCtx.waitUntil(Promise.all(promises));
+    }
+  }
+
+  return c.json({ status: "Success", message: "Recycling bin berhasil dibersihkan." });
 });
 
 export default peopleAdmin;

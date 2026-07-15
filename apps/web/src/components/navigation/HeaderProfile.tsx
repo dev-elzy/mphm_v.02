@@ -86,15 +86,10 @@ export function HeaderProfile() {
       } else {
         throw new Error("Signature invalid");
       }
-    } catch (err) {
-      console.warn("Cloudinary upload error, using local base64 fallback", err);
-      const reader = new FileReader();
-      reader.onload = () => {
-        setAvatarUrl(reader.result as string);
-        setUploadFeedback("Foto dimuat secara luring (offline fallback).");
-        toast("Foto profil dimuat dari luring (fallback).", "info", "Unggah Luring");
-      };
-      reader.readAsDataURL(file);
+    } catch (err: any) {
+      console.error("Cloudinary upload error:", err);
+      toast("Gagal mengunggah foto ke server. Pastikan pengaturan Cloudinary sudah benar.", "error", "Unggah Gagal");
+      setUploadFeedback("Upload gagal. Silakan coba lagi.");
     } finally {
       setUploadingImage(false);
     }
