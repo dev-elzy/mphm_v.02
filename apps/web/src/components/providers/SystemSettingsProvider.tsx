@@ -47,10 +47,8 @@ export function SystemSettingsProvider({ children }: { children: React.ReactNode
   // Allow access if user is Sekretariat (Admin)
   const isSekretariat = authSession?.role === "Sekretariat";
 
-  // If loading settings, we can just show a generic loading or wait
-  if (isLoadingSettings) {
-    return <div className="min-h-screen bg-zinc-950 flex items-center justify-center text-white">Loading System...</div>;
-  }
+  // We no longer block rendering with a full-screen "Loading System..." state
+  // to allow the login/dashboard pages to mount instantly in the browser.
 
   // Enforce Maintenance Mode
   if (isMaintenanceMode && !isSekretariat) {

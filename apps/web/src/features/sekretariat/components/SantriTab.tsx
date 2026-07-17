@@ -3,11 +3,12 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, X, MapPin, UploadCloud, Camera, User, Heart, Award } from "lucide-react";
+import { Plus, X, MapPin, UploadCloud, Camera, User, Heart, Award, Calendar, Hash, Phone, FileText } from "lucide-react";
 import { ColumnDef } from "@tanstack/react-table";
 import { UniversalDataGrid } from "@/components/data-grid/UniversalDataGrid";
 import { PillBadge } from "@/components/shared/PillBadge";
 import { IdentityCell } from "@/components/shared/IdentityCell";
+import { FallbackAvatar } from "@/components/shared/FallbackAvatar";
 import { RegionSelector } from "@/components/shared/RegionSelector";
 import { TableActions } from "@/components/shared/TableActions";
 import { useSantri, Santri } from "../queries/useSantri";
@@ -52,6 +53,7 @@ export function SantriTab({ onViewDetail, isReadOnly = false, selectedYearId }: 
   // Modal States
   const [showFormModal, setShowFormModal] = useState(false);
   const [editingSantri, setEditingSantri] = useState<Santri | null>(null);
+  const [selectedSantriForDetail, setSelectedSantriForDetail] = useState<Santri | null>(null);
 
   // Form States - Pribadi
   const [newName, setNewName] = useState("");
@@ -267,20 +269,9 @@ export function SantriTab({ onViewDetail, isReadOnly = false, selectedYearId }: 
         <IdentityCell 
           name={info.getValue() as string} 
           subInfo={info.row.original.class} 
-          stambuk={info.row.original.stambuk}
           avatarUrl={info.row.original.avatarUrl}
         />
       ),
-    },
-    {
-      accessorKey: "stambuk",
-      header: "Stambuk",
-      cell: (info) => <span className="font-mono text-xs text-zinc-700 dark:text-zinc-300">{info.getValue() as string}</span>,
-    },
-    {
-      accessorKey: "nik",
-      header: "NIK",
-      cell: (info) => <span className="font-mono text-xs text-zinc-600 dark:text-zinc-400">{info.getValue() as string}</span>,
     },
     {
       accessorKey: "class",
@@ -296,7 +287,7 @@ export function SantriTab({ onViewDetail, isReadOnly = false, selectedYearId }: 
       accessorKey: "address",
       header: "Alamat Wilayah",
       cell: (info) => (
-        <span className="text-xs text-zinc-500 dark:text-zinc-400 max-w-[150px] truncate block" title={info.getValue() as string}>
+        <span className="text-xs text-zinc-500 dark:text-zinc-400 max-w-[250px] truncate block" title={info.getValue() as string}>
           {info.getValue() as string}
         </span>
       ),
@@ -329,15 +320,9 @@ export function SantriTab({ onViewDetail, isReadOnly = false, selectedYearId }: 
         <IdentityCell 
           name={info.getValue() as string} 
           subInfo={`Lulus: Th. ${info.row.original.graduationYear || "-"}`} 
-          stambuk={info.row.original.stambuk}
           avatarUrl={info.row.original.avatarUrl}
         />
       ),
-    },
-    {
-      accessorKey: "stambuk",
-      header: "Stambuk",
-      cell: (info) => <span className="font-mono text-xs text-zinc-700 dark:text-zinc-300">{info.getValue() as string}</span>,
     },
     {
       accessorKey: "graduationYear",
@@ -352,7 +337,7 @@ export function SantriTab({ onViewDetail, isReadOnly = false, selectedYearId }: 
     {
       accessorKey: "address",
       header: "Alamat Asal",
-      cell: (info) => <span className="text-xs text-zinc-500 max-w-[150px] truncate block">{info.getValue() as string}</span>,
+      cell: (info) => <span className="text-xs text-zinc-500 max-w-[250px] truncate block">{info.getValue() as string}</span>,
     },
     {
       accessorKey: "status",
@@ -381,8 +366,6 @@ export function SantriTab({ onViewDetail, isReadOnly = false, selectedYearId }: 
       cell: (info) => (
         <IdentityCell 
           name={info.getValue() as string} 
-          subInfo={`Stambuk: ${info.row.original.stambuk}`} 
-          stambuk={info.row.original.stambuk}
           avatarUrl={info.row.original.avatarUrl}
         />
       ),
@@ -411,7 +394,7 @@ export function SantriTab({ onViewDetail, isReadOnly = false, selectedYearId }: 
     {
       accessorKey: "address",
       header: "Alamat Terakhir",
-      cell: (info) => <span className="text-xs text-zinc-500 max-w-[200px] truncate block">{info.getValue() as string}</span>,
+      cell: (info) => <span className="text-xs text-zinc-500 max-w-[250px] truncate block">{info.getValue() as string}</span>,
     },
     {
       id: "actions",
@@ -506,7 +489,7 @@ export function SantriTab({ onViewDetail, isReadOnly = false, selectedYearId }: 
         onPageSizeChange={setPageSize}
         onSearch={setSearchQuery}
         loading={isLoading}
-        onRowClick={onViewDetail ? ((row) => onViewDetail(row as unknown as Record<string, unknown>)) : undefined}
+        onRowClick={(row) => setSelectedSantriForDetail(row as unknown as Santri)}
         tableName={gridProps.tableName}
         importExportProps={{
           title: `Data Induk - ${activeSubTab === "aktif" ? "Santri Aktif" : "Mutasi"}`,
@@ -917,6 +900,186 @@ export function SantriTab({ onViewDetail, isReadOnly = false, selectedYearId }: 
                   </button>
                 </div>
               </form>
+            </motion.div>
+          </div>
+        )}
+
+        {/* Detailed Santri Profile Modal */}
+        {selectedSantriForDetail && (
+          <div className="fixed inset-0 z-55 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedSantriForDetail(null)}
+              className="fixed inset-0 bg-black/50 backdrop-blur-md"
+            />
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden relative z-10 max-h-[90vh] flex flex-col"
+            >
+              {/* Modal Header */}
+              <div className="p-6 border-b border-zinc-150 dark:border-zinc-800 flex justify-between items-center bg-zinc-50/50 dark:bg-zinc-900/50">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-indigo-500/10 text-indigo-650 dark:text-indigo-400 rounded-xl">
+                    <User className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg text-zinc-900 dark:text-white">
+                      Detail Lengkap Profil Santriwati
+                    </h3>
+                    <p className="text-xs text-zinc-500">Informasi akademik, data pribadi kependudukan, serta kredensial wali santri.</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setSelectedSantriForDetail(null)}
+                  className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors text-zinc-500 cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Modal Body */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                
+                {/* Profile Header Summary */}
+                <div className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-linear-to-r from-indigo-500/10 via-blue-500/5 to-transparent border border-indigo-500/20 dark:border-indigo-500/10 rounded-2xl">
+                  <div className="relative shrink-0 w-24 h-24 rounded-full overflow-hidden border-2 border-indigo-500/20 shadow-md bg-white dark:bg-zinc-800 flex items-center justify-center">
+                    {selectedSantriForDetail.avatarUrl ? (
+                      <img 
+                        src={selectedSantriForDetail.avatarUrl} 
+                        alt={selectedSantriForDetail.name} 
+                        className="w-full h-full object-cover" 
+                      />
+                    ) : (
+                      <FallbackAvatar name={selectedSantriForDetail.name} size="lg" />
+                    )}
+                  </div>
+                  <div className="flex-1 text-center sm:text-left space-y-2">
+                    <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                      <h2 className="text-2xl font-black text-zinc-900 dark:text-white">{selectedSantriForDetail.name}</h2>
+                      <PillBadge label={selectedSantriForDetail.status} variant={selectedSantriForDetail.status === "ACTIVE" ? "success" : "warning"} />
+                    </div>
+                    <p className="text-sm text-zinc-555 dark:text-zinc-400 font-semibold">
+                      Kelas: <span className="text-indigo-600 dark:text-indigo-400">{selectedSantriForDetail.class}</span>
+                    </p>
+                    <div className="flex flex-wrap justify-center sm:justify-start items-center gap-x-4 gap-y-1 text-xs text-zinc-400 font-medium">
+                      <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" /> {selectedSantriForDetail.address || "Alamat belum diisi"}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3-Column Info Cards Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  
+                  {/* Card 1: Informasi Akademik */}
+                  <div className="p-5 border border-zinc-200 dark:border-zinc-800 rounded-2xl bg-zinc-50/50 dark:bg-zinc-900/30 flex flex-col gap-4">
+                    <h4 className="text-xs font-bold text-indigo-650 dark:text-indigo-400 uppercase tracking-widest border-b border-zinc-150 dark:border-zinc-800 pb-2 flex items-center gap-1.5">
+                      <Award className="w-4 h-4" />
+                      <span>I. Kredensial Akademik</span>
+                    </h4>
+                    <div className="space-y-3.5 text-sm">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-xs font-bold text-zinc-400 dark:text-zinc-500">Nomor Stambuk</span>
+                        <span className="font-mono font-bold text-zinc-900 dark:text-white">{selectedSantriForDetail.stambuk || "-"}</span>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-xs font-bold text-zinc-400 dark:text-zinc-500">NIS (Nomor Induk Santri)</span>
+                        <span className="font-mono font-bold text-zinc-900 dark:text-white">{selectedSantriForDetail.nis || "-"}</span>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-xs font-bold text-zinc-400 dark:text-zinc-500">NISN</span>
+                        <span className="font-mono font-bold text-zinc-900 dark:text-white">{selectedSantriForDetail.nisn || "-"}</span>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-xs font-bold text-zinc-400 dark:text-zinc-500">Tahun Masuk</span>
+                        <span className="font-semibold text-zinc-800 dark:text-zinc-200">{selectedSantriForDetail.enrollmentYear || "-"}</span>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-xs font-bold text-zinc-400 dark:text-zinc-500">Mustahiq (Wali Kelas)</span>
+                        <span className="font-semibold text-zinc-850 dark:text-zinc-200">{selectedSantriForDetail.mustahiq || "-"}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Card 2: Informasi Pribadi */}
+                  <div className="p-5 border border-zinc-200 dark:border-zinc-800 rounded-2xl bg-zinc-50/50 dark:bg-zinc-900/30 flex flex-col gap-4">
+                    <h4 className="text-xs font-bold text-indigo-650 dark:text-indigo-400 uppercase tracking-widest border-b border-zinc-150 dark:border-zinc-800 pb-2 flex items-center gap-1.5">
+                      <FileText className="w-4 h-4" />
+                      <span>II. Data Kependudukan</span>
+                    </h4>
+                    <div className="space-y-3.5 text-sm">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-xs font-bold text-zinc-400 dark:text-zinc-500">NIK (Nomor Induk Kependudukan)</span>
+                        <span className="font-mono font-bold text-zinc-900 dark:text-white">{selectedSantriForDetail.nik || "-"}</span>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-xs font-bold text-zinc-400 dark:text-zinc-500">Jenis Kelamin</span>
+                        <span className="font-semibold text-zinc-800 dark:text-zinc-200">{selectedSantriForDetail.gender === "L" ? "Laki-laki" : "Perempuan"}</span>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-xs font-bold text-zinc-400 dark:text-zinc-500">Tempat, Tanggal Lahir</span>
+                        <span className="font-semibold text-zinc-800 dark:text-zinc-200">
+                          {selectedSantriForDetail.birthPlace || "-"}, {selectedSantriForDetail.birthDate || "-"}
+                        </span>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-xs font-bold text-zinc-400 dark:text-zinc-500">No. WhatsApp / HP</span>
+                        <span className="font-semibold text-zinc-805 dark:text-zinc-200">{selectedSantriForDetail.phoneNumber || "-"}</span>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-xs font-bold text-zinc-400 dark:text-zinc-500">Alamat Wilayah Lengkap</span>
+                        <span className="text-xs leading-relaxed text-zinc-700 dark:text-zinc-300 font-semibold">{selectedSantriForDetail.address || "-"}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Card 3: Informasi Wali & KK */}
+                  <div className="p-5 border border-zinc-200 dark:border-zinc-800 rounded-2xl bg-zinc-50/50 dark:bg-zinc-900/30 flex flex-col gap-4">
+                    <h4 className="text-xs font-bold text-indigo-650 dark:text-indigo-400 uppercase tracking-widest border-b border-zinc-150 dark:border-zinc-800 pb-2 flex items-center gap-1.5">
+                      <Heart className="w-4 h-4" />
+                      <span>III. Kontak & Wali Santri</span>
+                    </h4>
+                    <div className="space-y-3.5 text-sm">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-xs font-bold text-zinc-400 dark:text-zinc-500">Nama Lengkap Wali</span>
+                        <span className="font-bold text-zinc-900 dark:text-white">{selectedSantriForDetail.guardianName || "-"}</span>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-xs font-bold text-zinc-400 dark:text-zinc-500">Hubungan Keluarga</span>
+                        <span className="font-semibold text-zinc-800 dark:text-zinc-200">{selectedSantriForDetail.guardianRelation || "-"}</span>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-xs font-bold text-zinc-400 dark:text-zinc-500">Nomor KK (Kartu Keluarga)</span>
+                        <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400">{selectedSantriForDetail.familyCardNumber || "-"}</span>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-xs font-bold text-zinc-400 dark:text-zinc-500">NIK Wali</span>
+                        <span className="font-mono font-bold text-zinc-900 dark:text-white">{selectedSantriForDetail.guardianNik || "-"}</span>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-xs font-bold text-zinc-400 dark:text-zinc-500">No. WhatsApp Wali</span>
+                        <span className="font-semibold text-zinc-800 dark:text-zinc-200">{selectedSantriForDetail.guardianPhone || "-"}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+
+              </div>
+
+              {/* Modal Footer */}
+              <div className="p-5 border-t border-zinc-150 dark:border-zinc-800 flex justify-end bg-zinc-50/50 dark:bg-zinc-900/50">
+                <button
+                  onClick={() => setSelectedSantriForDetail(null)}
+                  className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl shadow-md transition-colors cursor-pointer"
+                >
+                  Tutup Rincian
+                </button>
+              </div>
             </motion.div>
           </div>
         )}

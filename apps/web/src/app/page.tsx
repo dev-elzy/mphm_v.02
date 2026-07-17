@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "../lib/auth";
 import { 
   ShieldCheck, 
   KeyRound,
@@ -14,6 +16,8 @@ import {
 
 export default function Page() {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const { data: user } = useAuth();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -32,6 +36,25 @@ export default function Page() {
     { id: "keamanan", href: "/keamanan" },
     { id: "wali_santri", href: "/guardian" },
   ];
+
+  // Auto-redirect if user is already logged in
+  useEffect(() => {
+    if (user) {
+      const roleStr = String(user.role).trim().toLowerCase();
+      let clientRoleKey = "mufattisy";
+      if (roleStr === "sekretariat") clientRoleKey = "sekretariat";
+      else if (roleStr === "mufattisy") clientRoleKey = "mufattisy";
+      else if (roleStr === "mundzir") clientRoleKey = "mundzir";
+      else if (roleStr === "mustahiq") clientRoleKey = "mustahiq";
+      else if (roleStr === "petugas keamanan") clientRoleKey = "keamanan";
+      else if (roleStr === "wali santri") clientRoleKey = "wali_santri";
+      
+      const matchedRole = roles.find(r => r.id === clientRoleKey);
+      if (matchedRole) {
+        router.replace(matchedRole.href);
+      }
+    }
+  }, [user, router]);
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,6 +93,10 @@ export default function Page() {
       if (matchedRole) {
         redirectUrl = matchedRole.href;
       }
+      
+      // Update cache immediately to prevent loop redirection
+      queryClient.setQueryData(["auth-session"], resData.data);
+      await queryClient.invalidateQueries({ queryKey: ["auth-session"] });
       
       router.push(redirectUrl);
     } catch (err) {
