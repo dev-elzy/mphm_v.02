@@ -133,7 +133,7 @@ export const requireAuth = async (c: Context<AppEnv>, next: Next) => {
       sameSite: "None",
       path: "/",
       maxAge: 3600,
-      domain: "m.p3hm.my.id",
+      domain: c.env.ENVIRONMENT === "production" ? "m.p3hm.my.id" : undefined,
     });
   }
 

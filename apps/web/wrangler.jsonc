@@ -2,7 +2,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "mphm-web",
   "main": ".open-next/worker.js",
-  "compatibility_date": "2024-09-23",
+  "compatibility_date": "2026-07-13",
   "compatibility_flags": ["nodejs_compat"],
   "assets": {
     "directory": ".open-next/assets",
@@ -16,7 +16,8 @@
   ],
   "vars": {
     "NEXT_PUBLIC_API_URL": "https://api.m.p3hm.my.id",
-    "NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME": "r9f9o3jm"
+    "NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME": "r9f9o3jm",
+    "NEXT_PRIVATE_MINIMAL_MODE": "1"
   },
   "observability": {
     "logs": {

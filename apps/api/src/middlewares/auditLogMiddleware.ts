@@ -48,8 +48,8 @@ export const auditLogMiddleware = (moduleName: string) => {
       let afterData: string | null = null;
       try {
         const clonedRes = c.res.clone();
-        const resBody = await clonedRes.json() as any;
-        afterData = JSON.stringify(resBody?.data || resBody);
+        const resBody = (await clonedRes.json()) as Record<string, unknown> | null;
+        afterData = JSON.stringify(resBody && resBody.data !== undefined ? resBody.data : resBody);
       } catch {
         afterData = requestBody; // Fallback ke request body
       }

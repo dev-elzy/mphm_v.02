@@ -31,10 +31,15 @@ export async function apiRequest<T = unknown>(
     throw new Error("Unauthorized");
   }
 
-  const json = await response.json();
+  let json: any;
+  try {
+    json = await response.json();
+  } catch {
+    throw new Error(`Gagal memproses response dari server (${response.status}). Silahkan hubungi developer.`);
+  }
   
   if (!response.ok) {
-    throw new Error(json.message || "Request failed");
+    throw new Error(json?.message || "Request failed");
   }
 
   return json;

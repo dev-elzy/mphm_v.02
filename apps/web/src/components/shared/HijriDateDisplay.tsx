@@ -10,17 +10,16 @@ interface HijriDateDisplayProps {
   showIcon?: boolean;
 }
 
-export function HijriDateDisplay({ date = new Date(), className = "", showIcon = true }: HijriDateDisplayProps) {
+export function HijriDateDisplay({ date, className = "", showIcon = true }: HijriDateDisplayProps) {
   const [mounted, setMounted] = useState(false);
+  const [localDate, setLocalDate] = useState<Date | null>(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setMounted(true);
-    }, 0);
-    return () => clearTimeout(timer);
-  }, []);
+    setLocalDate(date || new Date());
+    setMounted(true);
+  }, [date]);
 
-  const formattedDate = mounted ? getHijriAndMasehiDate(date) : "";
+  const formattedDate = (mounted && localDate) ? getHijriAndMasehiDate(localDate) : "";
 
   return (
     <div className={`flex items-center gap-2 text-sm text-zinc-650 dark:text-zinc-400 bg-white/80 dark:bg-zinc-900/60 px-4 py-2 border border-zinc-200 dark:border-zinc-800 rounded-xl w-fit shadow-xs ${className}`}>

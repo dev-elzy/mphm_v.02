@@ -42,7 +42,6 @@ export function Sidebar({ role }: { role: RoleTypes }) {
     hasSantri: true
   });
   const [loadingStatus, setLoadingStatus] = useState(role !== "sekretariat" ? false : true);
-  const [showQRModal, setShowQRModal] = useState(false);
 
   useEffect(() => {
     const fetchStatus = async () => {
@@ -228,51 +227,6 @@ export function Sidebar({ role }: { role: RoleTypes }) {
           );
         })}
       </nav>
-      
-      
-      {/* Mustahiq FAB QR Code */}
-      {role === "mustahiq" && (
-        <div className="absolute bottom-24 left-0 right-0 flex justify-center z-50">
-          <button 
-            onClick={() => setShowQRModal(true)}
-            className="flex flex-col items-center justify-center gap-1 w-16 h-16 bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-[0_8px_30px_rgba(37,99,235,0.4)] border-4 border-slate-950 transition-transform hover:-translate-y-1"
-          >
-            <div className="p-1 bg-white rounded-sm">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M3 3H11V11H3V3Z" fill="#2563EB"/>
-                <path d="M3 13H11V21H3V13Z" fill="#2563EB"/>
-                <path d="M13 3H21V11H13V3Z" fill="#2563EB"/>
-                <rect x="5" y="5" width="4" height="4" fill="white"/>
-                <rect x="5" y="15" width="4" height="4" fill="white"/>
-                <rect x="15" y="5" width="4" height="4" fill="white"/>
-                <path d="M13 13H16V16H13V13Z" fill="#2563EB"/>
-                <path d="M18 18H21V21H18V18Z" fill="#2563EB"/>
-                <path d="M13 18H16V21H13V18Z" fill="#2563EB"/>
-                <path d="M18 13H21V16H18V13Z" fill="#2563EB"/>
-                <path d="M16 16H18V18H16V16Z" fill="#2563EB"/>
-              </svg>
-            </div>
-          </button>
-        </div>
-      )}
-
-      {showQRModal && (
-        <div className="fixed inset-0 z-55 flex items-center justify-center p-4">
-          <div onClick={() => setShowQRModal(false)} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl max-w-sm w-full p-8 relative z-10 flex flex-col items-center text-center gap-4">
-            <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mb-2">
-              <Lock className="w-8 h-8 text-blue-400" />
-            </div>
-            <h3 className="text-xl font-bold text-white">Segera Hadir</h3>
-            <p className="text-sm text-slate-400 leading-relaxed">
-              Modul kehadiran QR Code ini masih dalam tahap pengembangan dan akan segera tersedia pada pembaruan sistem berikutnya.
-            </p>
-            <button onClick={() => setShowQRModal(false)} className="mt-4 px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl w-full transition-colors">
-              Tutup
-            </button>
-          </div>
-        </div>
-      )}
 
       <div className="p-4 border-t border-slate-900 bg-slate-950/50 mt-auto">
         <div className="bg-slate-900 rounded-xl p-3 border border-slate-800/50 flex flex-col items-center justify-center text-center gap-1">

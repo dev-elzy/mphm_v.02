@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-
-export type RoleTypes = "sekretariat" | "mufattisy" | "mundzir" | "mustahiq" | "keamanan" | "wali_santri";
+import { RoleTypes } from "../config/navigation.config";
+export type { RoleTypes };
 
 export interface MenuCapabilities {
   view: boolean;
@@ -210,10 +210,12 @@ export function useRoleUIConfig(role: RoleTypes) {
 
     loadConfig();
 
-    window.addEventListener("role_configs_changed", loadConfig);
-    return () => {
-      window.removeEventListener("role_configs_changed", loadConfig);
-    };
+    if (typeof window !== "undefined") {
+      window.addEventListener("role_configs_changed", loadConfig);
+      return () => {
+        window.removeEventListener("role_configs_changed", loadConfig);
+      };
+    }
   }, [role]);
 
   /**

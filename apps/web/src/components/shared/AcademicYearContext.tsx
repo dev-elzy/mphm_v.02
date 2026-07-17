@@ -17,10 +17,13 @@ export function AcademicYearProvider({ children }: { children: ReactNode }) {
   const [selectedYearId, setSelectedYearId] = useState<string>("");
 
   useEffect(() => {
-    if (years.length > 0 && !selectedYearId) {
-      const active = years.find((y: AcademicYear) => y.isActive);
-      const targetId = active ? active.id : years[0].id;
-      queueMicrotask(() => setSelectedYearId(targetId));
+    if (years.length > 0) {
+      const exists = years.some((y) => y.id === selectedYearId);
+      if (!selectedYearId || !exists) {
+        const active = years.find((y: AcademicYear) => y.isActive);
+        const targetId = active ? active.id : years[0].id;
+        queueMicrotask(() => setSelectedYearId(targetId));
+      }
     }
   }, [years, selectedYearId]);
 

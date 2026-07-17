@@ -1,6 +1,7 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
+import { Lock } from "lucide-react";
 import dynamic from "next/dynamic";
 
 const CommandPalette = dynamic(() => import("../shared/CommandPalette"), { ssr: false });
@@ -47,6 +48,7 @@ function GlobalHeaderActions() {
 
 export function DashboardShell({ role, children }: DashboardShellProps) {
   const { config } = useRoleUIConfig(role);
+  const [showQRModal, setShowQRModal] = useState(false);
 
   // Pad the main workspace if Bottom Nav is active (on desktop as well as mobile)
   const paddingClass = config.navigationStyle === "bottom_nav" 
@@ -77,6 +79,50 @@ export function DashboardShell({ role, children }: DashboardShellProps) {
       
       {/* BottomNav - internally decides screen visibility based on navigationStyle config */}
       <BottomNav role={role} />
+
+      {/* Mustahiq FAB QR Code */}
+      {role === "mustahiq" && (
+        <div className="fixed bottom-20 right-4 md:bottom-6 md:right-6 flex justify-center z-50">
+          <button 
+            onClick={() => setShowQRModal(true)}
+            className="flex flex-col items-center justify-center gap-1 w-14 h-14 bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-[0_8px_30px_rgba(37,99,235,0.4)] transition-transform hover:-translate-y-1 cursor-pointer"
+          >
+            <div className="p-1.5 bg-white rounded-md">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 3H11V11H3V3Z" fill="#2563EB"/>
+                <path d="M3 13H11V21H3V13Z" fill="#2563EB"/>
+                <path d="M13 3H21V11H13V3Z" fill="#2563EB"/>
+                <rect x="5" y="5" width="4" height="4" fill="white"/>
+                <rect x="5" y="15" width="4" height="4" fill="white"/>
+                <rect x="15" y="5" width="4" height="4" fill="white"/>
+                <path d="M13 13H16V16H13V13Z" fill="#2563EB"/>
+                <path d="M18 18H21V21H18V18Z" fill="#2563EB"/>
+                <path d="M13 18H16V21H13V18Z" fill="#2563EB"/>
+                <path d="M18 13H21V16H18V13Z" fill="#2563EB"/>
+                <path d="M16 16H18V18H16V16Z" fill="#2563EB"/>
+              </svg>
+            </div>
+          </button>
+        </div>
+      )}
+
+      {showQRModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div onClick={() => setShowQRModal(false)} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl max-w-sm w-full p-8 relative z-10 flex flex-col items-center text-center gap-4">
+            <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mb-2">
+              <Lock className="w-8 h-8 text-blue-400" />
+            </div>
+            <h3 className="text-xl font-bold text-white">Segera Hadir</h3>
+            <p className="text-sm text-slate-400 leading-relaxed">
+              Modul kehadiran QR Code ini masih dalam tahap pengembangan dan akan segera tersedia pada pembaruan sistem berikutnya.
+            </p>
+            <button onClick={() => setShowQRModal(false)} className="mt-4 px-6 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl w-full transition-colors cursor-pointer">
+              Tutup
+            </button>
+          </div>
+        </div>
+      )}
     </div>
     </AcademicYearProvider>
   );

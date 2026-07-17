@@ -11,7 +11,7 @@ export function ForcePasswordChangeModal() {
   const { data: user, isLoading } = useAuth();
   const queryClient = useQueryClient();
   const { toast } = useToast();
-
+  const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
@@ -21,7 +21,7 @@ export function ForcePasswordChangeModal() {
         method: "PUT",
         body: JSON.stringify({
           fullName: user?.fullName || "",
-          oldPassword: "mphm123",
+          oldPassword,
           newPassword,
         }),
       });
@@ -68,6 +68,18 @@ export function ForcePasswordChangeModal() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-bold text-zinc-500 dark:text-zinc-400">Password Lama / Default</label>
+            <input
+              type="password"
+              required
+              value={oldPassword}
+              onChange={(e) => setOldPassword(e.target.value)}
+              placeholder="Masukkan password saat ini (cth: mphm123)"
+              className="px-4 py-3 bg-zinc-50 dark:bg-zinc-800/50 border border-zinc-200 dark:border-zinc-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 dark:text-zinc-200"
+            />
+          </div>
+
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-bold text-zinc-500 dark:text-zinc-400">Password Baru</label>
             <input

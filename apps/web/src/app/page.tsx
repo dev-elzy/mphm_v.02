@@ -224,7 +224,7 @@ export default function Page() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="relative flex-1 overflow-hidden group/btn rounded-xl sm:rounded-2xl p-px disabled:opacity-70 disabled:cursor-not-allowed"
+                    className="relative flex-1 overflow-hidden group/btn rounded-xl sm:rounded-2xl p-px disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
                   >
                     <span className="absolute inset-0 bg-linear-to-r from-blue-600 via-indigo-600 to-blue-600 opacity-80 group-hover/btn:opacity-100 transition-opacity duration-300"></span>
                     <div className="relative bg-linear-to-b from-white/10 to-transparent flex items-center justify-center gap-2 py-2 sm:py-3 px-3 sm:px-4 rounded-xl sm:rounded-2xl text-white text-xs sm:text-sm lg:text-base font-bold tracking-wide shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)] transition-transform active:scale-[0.98]">
@@ -325,13 +325,13 @@ export default function Page() {
               <div className="text-xs text-slate-500 mb-1">Username (No WA):</div>
               <div className="font-mono text-sm text-blue-400 font-bold mb-3">{regSuccess.username}</div>
               <div className="text-xs text-slate-500 mb-1">Password Default:</div>
-              <div className="font-mono text-sm text-emerald-400 font-bold">mphm123</div>
+              <div className="font-mono text-sm text-emerald-400 font-bold">Dikirim via WhatsApp / Hubungi Admin</div>
             </div>
             <button
               type="button"
               onClick={() => {
                 setUsername(regSuccess.username);
-                setPassword("mphm123");
+                setPassword("");
                 setRegSuccess(null);
                 setViewMode("login");
               }}

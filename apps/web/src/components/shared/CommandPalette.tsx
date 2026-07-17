@@ -30,6 +30,14 @@ export default function CommandPalette() {
     return () => document.removeEventListener("keydown", down);
   }, []);
 
+  // Reset search states when closing
+  useEffect(() => {
+    if (!open) {
+      setSearch("");
+      setResults([]);
+    }
+  }, [open]);
+
   // Live search debounced/fetch
   useEffect(() => {
     if (!search) {

@@ -441,7 +441,12 @@ export function HeaderProfile() {
                   <div className="flex justify-end gap-3 pt-5 border-t border-zinc-100 dark:border-zinc-800 shrink-0">
                     <button
                       type="button"
-                      onClick={() => setShowSettingsModal(false)}
+                      onClick={() => {
+                        if (avatarUrl && avatarUrl !== user?.avatarUrl) {
+                          apiRequest("/api/media", { method: "DELETE", body: JSON.stringify({ url: avatarUrl }) }).catch(() => {});
+                        }
+                        setShowSettingsModal(false);
+                      }}
                       className="px-4 py-2.5 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-750 text-zinc-750 dark:text-zinc-200 text-sm font-semibold rounded-xl transition-colors cursor-pointer"
                     >
                       Batal

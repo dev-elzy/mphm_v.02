@@ -141,7 +141,7 @@ export function RegionSelector({ onChange }: RegionSelectorProps) {
 
   const [loading, setLoading] = useState(false);
   const [apiSource, setApiSource] = useState("cahyadsn");
-  const [apiKey, setApiKey] = useState("8e49f28e0f2f2cf56393c352613eec358e85fb7077ce6f7f453ebb826a7b1f6d");
+  const [apiKey, setApiKey] = useState("");
 
   // Postcode Autocomplete states
   const [postcode, setPostcode] = useState("");
@@ -152,7 +152,7 @@ export function RegionSelector({ onChange }: RegionSelectorProps) {
     const loadConfig = () => {
       if (typeof window !== "undefined") {
         setApiSource(localStorage.getItem("region_api_source") || "cahyadsn");
-        setApiKey(localStorage.getItem("binderbyte_api_key") || "8e49f28e0f2f2cf56393c352613eec358e85fb7077ce6f7f453ebb826a7b1f6d");
+        setApiKey(localStorage.getItem("binderbyte_api_key") || "");
       }
     };
     loadConfig();

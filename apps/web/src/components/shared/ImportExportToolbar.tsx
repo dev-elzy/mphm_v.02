@@ -285,22 +285,25 @@ export function ImportExportToolbar({
             </button>
 
             {showImportDropdown && (
-              <div className="absolute left-0 mt-2 w-56 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl shadow-lg z-50 p-1">
-                <button
-                  onClick={handleDownloadTemplate}
-                  className="w-full flex items-center gap-2 px-3 py-2.5 hover:bg-zinc-50 dark:hover:bg-zinc-700/50 rounded-lg text-left text-sm text-zinc-700 dark:text-zinc-300 font-medium transition-colors"
-                >
-                  <Download className="w-4 h-4 text-emerald-500" />
-                  <span>Unduh Template Excel</span>
-                </button>
-                <button
-                  onClick={() => { fileInputRef.current?.click(); }}
-                  className="w-full flex items-center gap-2 px-3 py-2.5 hover:bg-zinc-50 dark:hover:bg-zinc-700/50 rounded-lg text-left text-sm text-zinc-700 dark:text-zinc-300 font-medium transition-colors"
-                >
-                  <Upload className="w-4 h-4 text-blue-500" />
-                  <span>Unggah File Data</span>
-                </button>
-              </div>
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowImportDropdown(false)} />
+                <div className="absolute left-0 mt-2 w-56 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl shadow-lg z-50 p-1">
+                  <button
+                    onClick={handleDownloadTemplate}
+                    className="w-full flex items-center gap-2 px-3 py-2.5 hover:bg-zinc-50 dark:hover:bg-zinc-700/50 rounded-lg text-left text-sm text-zinc-700 dark:text-zinc-300 font-medium transition-colors"
+                  >
+                    <Download className="w-4 h-4 text-emerald-500" />
+                    <span>Unduh Template Excel</span>
+                  </button>
+                  <button
+                    onClick={() => { fileInputRef.current?.click(); }}
+                    className="w-full flex items-center gap-2 px-3 py-2.5 hover:bg-zinc-50 dark:hover:bg-zinc-700/50 rounded-lg text-left text-sm text-zinc-700 dark:text-zinc-300 font-medium transition-colors"
+                  >
+                    <Upload className="w-4 h-4 text-blue-500" />
+                    <span>Unggah File Data</span>
+                  </button>
+                </div>
+              </>
             )}
           </div>
         )}
@@ -318,22 +321,25 @@ export function ImportExportToolbar({
             </button>
 
             {showExportDropdown && (
-              <div className="absolute left-0 mt-2 w-56 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl shadow-lg z-50 p-1">
-                <button
-                  onClick={handleExportExcel}
-                  className="w-full flex items-center gap-2 px-3 py-2.5 hover:bg-zinc-50 dark:hover:bg-zinc-700/50 rounded-lg text-left text-sm text-zinc-700 dark:text-zinc-300 font-medium transition-colors"
-                >
-                  <FileSpreadsheet className="w-4 h-4 text-emerald-500" />
-                  <span>Ekspor ke Excel</span>
-                </button>
-                <button
-                  onClick={handleExportPDF}
-                  className="w-full flex items-center gap-2 px-3 py-2.5 hover:bg-zinc-50 dark:hover:bg-zinc-700/50 rounded-lg text-left text-sm text-zinc-700 dark:text-zinc-300 font-medium transition-colors"
-                >
-                  <FileText className="w-4 h-4 text-rose-500" />
-                  <span>Ekspor ke PDF</span>
-                </button>
-              </div>
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowExportDropdown(false)} />
+                <div className="absolute left-0 mt-2 w-56 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl shadow-lg z-50 p-1">
+                  <button
+                    onClick={handleExportExcel}
+                    className="w-full flex items-center gap-2 px-3 py-2.5 hover:bg-zinc-50 dark:hover:bg-zinc-700/50 rounded-lg text-left text-sm text-zinc-700 dark:text-zinc-300 font-medium transition-colors"
+                  >
+                    <FileSpreadsheet className="w-4 h-4 text-emerald-500" />
+                    <span>Ekspor ke Excel</span>
+                  </button>
+                  <button
+                    onClick={handleExportPDF}
+                    className="w-full flex items-center gap-2 px-3 py-2.5 hover:bg-zinc-50 dark:hover:bg-zinc-700/50 rounded-lg text-left text-sm text-zinc-700 dark:text-zinc-300 font-medium transition-colors"
+                  >
+                    <FileText className="w-4 h-4 text-rose-500" />
+                    <span>Ekspor ke PDF</span>
+                  </button>
+                </div>
+              </>
             )}
           </div>
         )}

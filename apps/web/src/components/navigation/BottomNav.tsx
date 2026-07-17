@@ -72,7 +72,7 @@ export function BottomNav({ role, forceShow = false }: { role: RoleTypes, forceS
 
   // Limit bottom nav items to max 5 to prevent UI overlap on mobile
   const allItems = role === "sekretariat"
-    ? [...filteredStaticItems, ...customItems]
+    ? [...filteredStaticItems, ...filteredCustomItems]
     : [...filteredStaticItems, ...filteredCustomItems];
   const navItems = allItems.slice(0, 5);
 

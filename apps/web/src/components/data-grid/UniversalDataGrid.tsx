@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -80,11 +80,16 @@ export function UniversalDataGrid<TData, TValue>({
     return () => clearTimeout(handler);
   }, [globalFilter]);
 
+  const onSearchRef = useRef(onSearch);
   useEffect(() => {
-    if (onSearch) {
-      onSearch(debouncedFilter);
+    onSearchRef.current = onSearch;
+  }, [onSearch]);
+
+  useEffect(() => {
+    if (onSearchRef.current) {
+      onSearchRef.current(debouncedFilter);
     }
-  }, [debouncedFilter, onSearch]);
+  }, [debouncedFilter]);
 
   const [filteredData, setFilteredData] = useState<TData[]>(data);
 
