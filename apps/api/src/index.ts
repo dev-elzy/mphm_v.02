@@ -97,6 +97,7 @@ app.use('/api/promotion/*', requireAuth)
 app.use('/api/admin/*', requireAuth)
 app.use('/api/mustahiq/*', requireAuth)
 app.use('/api/guardian/*', requireAuth)
+app.use('/api/keamanan/*', requireAuth)
 
 // Global audit log middleware untuk semua route yang mengubah data
 app.use('/api/media/*', auditLogMiddleware('MEDIA_LIBRARY'))

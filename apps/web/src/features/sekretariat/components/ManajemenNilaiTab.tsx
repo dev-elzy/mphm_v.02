@@ -18,18 +18,18 @@ export function ManajemenNilaiTab({ isReadOnly: propsIsReadOnly, selectedYearId,
   const [selectedKwartal, setSelectedKwartal] = useState<number>(1);
   
   const { data: classes = [] } = useClasses(selectedYearId);
-  const [selectedClassId, setSelectedClassId] = useState<string>(fixedClass || "");
+  const [selectedClassId, setSelectedClassId] = useState<string>("");
 
   useEffect(() => {
-    if (classes.length > 0 && !selectedClassId) {
-      queueMicrotask(() => {
-        if (fixedClass) {
-          const found = classes.find(c => c.name === fixedClass);
-          if (found) setSelectedClassId(found.id);
-        } else {
-          setSelectedClassId(classes[0].id);
+    if (classes.length > 0) {
+      if (fixedClass) {
+        const found = classes.find(c => c.name === fixedClass || c.id === fixedClass);
+        if (found) {
+          setSelectedClassId(found.id);
         }
-      });
+      } else if (!selectedClassId) {
+        setSelectedClassId(classes[0].id);
+      }
     }
   }, [classes, selectedClassId, fixedClass]);
 
