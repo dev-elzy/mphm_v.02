@@ -174,7 +174,7 @@ export function RaportTab({ selectedYearId }: { selectedYearId?: string }) {
         columns={columns as unknown as ColumnDef<Record<string, unknown>, unknown>[]}
         data={displayedStudents as unknown as Record<string, unknown>[]}
         pageCount={1} pageIndex={0} pageSize={100} loading={isLoading1 || isLoading2}
-        onRowClick={() => {}}
+        onRowClick={(row) => handleCetak(row as unknown as StudentScore)}
         tableName="raport"
       />
 

@@ -83,7 +83,7 @@ export function IjazahTab() {
         onPageChange={setPageIndex}
         onPageSizeChange={setPageSize}
         onSearch={setSearchQuery} loading={isLoading}
-        onRowClick={() => {}}
+        onRowClick={(row) => handleCetak(row as unknown as Santri)}
         tableName="ijazah"
       />
 

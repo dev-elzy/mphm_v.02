@@ -244,7 +244,7 @@ export function RoomsTab({ isReadOnly = false }: RoomsTabProps) {
         onPageSizeChange={setPageSize}
         onSearch={setSearchQuery}
         loading={isLoading}
-        onRowClick={() => {}}
+        onRowClick={(row) => handleOpenEdit(row as unknown as Room)}
         tableName="rooms"
         importExportProps={{
           title: "Data Kamar & Asrama Santri",
