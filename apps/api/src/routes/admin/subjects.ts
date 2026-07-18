@@ -131,27 +131,25 @@ subjectsAdmin.put("/curriculums/:id/subjects", zValidator("json", batchCurriculu
   const { mappings } = c.req.valid("json");
   const db = createDb(c.env.DB);
 
-  // Bersihkan data lama di kurikulum tersebut sebelum disuntik ulang
-  await db
-    .delete(curriculumSubjects)
-    .where(eq(curriculumSubjects.curriculumId, id));
+  // Execute atomic transaction (delete old and insert new mappings)
+  const batchOps = [
+    db.delete(curriculumSubjects).where(eq(curriculumSubjects.curriculumId, id))
+  ];
 
-  const inserted = [];
   for (const map of mappings) {
-    const res = await db
-      .insert(curriculumSubjects)
-      .values({
+    batchOps.push(
+      db.insert(curriculumSubjects).values({
         curriculumId: id,
         subjectId: map.subjectId,
         institutionLevel: map.institutionLevel,
         classLevel: map.classLevel,
-      })
-      .returning()
-      .get();
-    inserted.push(res);
+      }) as any
+    );
   }
 
-  return c.json({ status: "Success", message: "Pemetaan silabus berhasil disimpan", data: inserted });
+  await db.batch(batchOps as any);
+
+  return c.json({ status: "Success", message: "Pemetaan silabus berhasil disimpan" });
 });
 
 export default subjectsAdmin;

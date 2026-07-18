@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { createDb, studentProfiles, guardianProfiles, people, studentScores, subjects, attendanceRecords, studentViolations } from "@mphm/db";
-import { eq, and, sql, count } from "drizzle-orm";
+import { eq, and, sql, count, inArray } from "drizzle-orm";
 import type { AppEnv } from "../../types";
 import { requireRole, requireDataScope } from "../../middlewares/rbacMiddleware";
 import { PeopleService } from "../../services/people.service";
@@ -20,49 +20,39 @@ guardianPortal.get("/children", async (c) => {
     return c.json({ status: "Error", message: "Nomor KK tidak terikat pada akun Anda." }, 400);
   }
 
-  // Smart KK Mapping: Cari semua student_profiles yang memiliki guardian_profile 
-  // dengan family_card_number yang sama dengan wali yang login.
-  // Logika: guardian_profiles (KK wali) → cari student_profiles yang person_id-nya 
-  // juga punya guardian_profiles dengan KK yang sama (karena santri juga dicatat di KK).
   const result = await db.run(sql`
     SELECT 
-      sp.id as studentId,
-      sp.nis as nis,
-      p.full_name as fullName,
-      p.gender as gender,
-      p.avatar_url as avatarUrl,
+      sp.id as id,
+      p.full_name as name,
+      sp.stambuk_number as stambuk,
       ac.full_name as class,
-      pm.full_name as mustahiq
-    FROM guardian_profiles gp_child
-    INNER JOIN people p ON gp_child.person_id = p.id
-    INNER JOIN student_profiles sp ON sp.person_id = p.id
+      sp.nis as nis,
+      sp.nisn as nisn,
+      sp.enrollment_year as enrollmentYear,
+      sp.status as status
+    FROM student_profiles sp
+    INNER JOIN people p ON sp.person_id = p.id
+    INNER JOIN guardian_profiles gp ON gp.family_card_number = ${user.familyCardNumber}
     LEFT JOIN class_enrollments ce ON ce.student_id = sp.id AND ce.status = 'ACTIVE'
     LEFT JOIN academic_classes ac ON ce.class_id = ac.id
-    LEFT JOIN teacher_profiles tp ON ac.mustahiq_id = tp.id
-    LEFT JOIN people pm ON tp.person_id = pm.id
-    WHERE gp_child.family_card_number = ${user.familyCardNumber}
-      AND sp.status = 'ACTIVE'
+    WHERE sp.status = 'ACTIVE'
   `);
-  const children = result.results || [];
-
-  return c.json({ status: "Success", data: children });
+  
+  return c.json({ status: "Success", data: result.results || [] });
 });
 
 // ============================================================
-// 1.5 GET AGGREGATED STATS FOR DASHBOARD
+// STATS OVERVIEW
 // ============================================================
 guardianPortal.get("/stats", async (c) => {
   const user = c.get("user");
   const db = createDb(c.env.DB);
 
   if (!user.familyCardNumber) {
-    return c.json({ 
-      status: "Success", 
-      data: { totalChildren: 0, totalViolations: 0, averageAttendance: 100 } 
-    });
+    return c.json({ status: "Error", message: "Nomor KK tidak terikat pada akun Anda." }, 400);
   }
 
-  // 1. Find all student IDs for this guardian
+  // 1. Get all active children connected
   const childrenResult = await db.run(sql`
     SELECT sp.id as studentId
     FROM guardian_profiles gp
@@ -81,35 +71,31 @@ guardianPortal.get("/stats", async (c) => {
     });
   }
 
-  // 2. Count total violations for all children
-  let totalViolations = 0;
-  for (const id of childrenIds) {
-    const vRes = await db.select({ count: count(studentViolations.id) })
-      .from(studentViolations)
-      .where(eq(studentViolations.studentId, id))
-      .get();
-    totalViolations += vRes?.count || 0;
-  }
+  // 2. Count total violations for all children in 1 query (optimized)
+  const vRes = await db
+    .select({ count: count(studentViolations.id) })
+    .from(studentViolations)
+    .where(inArray(studentViolations.studentId, childrenIds))
+    .get();
+  const totalViolations = vRes?.count || 0;
 
-  // 3. Calculate average attendance for all children
+  // 3. Calculate average attendance for all children in 1 query (optimized)
+  const aRes = await db
+    .select({
+      status: attendanceRecords.status,
+      count: count(attendanceRecords.id)
+    })
+    .from(attendanceRecords)
+    .where(inArray(attendanceRecords.studentId, childrenIds))
+    .groupBy(attendanceRecords.status)
+    .all();
+      
   let totalAtt = 0;
   let presentAtt = 0;
-  
-  for (const id of childrenIds) {
-    const aRes = await db.select({
-        status: attendanceRecords.status,
-        count: count(attendanceRecords.id)
-      })
-      .from(attendanceRecords)
-      .where(eq(attendanceRecords.studentId, id))
-      .groupBy(attendanceRecords.status)
-      .all();
-      
-    for (const row of aRes) {
-      totalAtt += row.count;
-      if (row.status === "HADIR" || row.status === "SAKIT" || row.status === "IZIN") {
-        presentAtt += row.count;
-      }
+  for (const row of aRes) {
+    totalAtt += row.count;
+    if (row.status === "HADIR" || row.status === "SAKIT" || row.status === "IZIN") {
+      presentAtt += row.count;
     }
   }
   
