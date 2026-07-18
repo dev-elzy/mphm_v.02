@@ -152,7 +152,7 @@ export function PengurusTab({ onViewDetail, isReadOnly = false }: { onViewDetail
         onPageSizeChange={setPageSize}
         onSearch={setSearchQuery}
         loading={isLoading}
-        onRowClick={(row) => onViewDetail(row)}
+        onRowClick={(row) => handleOpenEdit(row as unknown as Pengurus)}
         tableName="pengurus"
         importExportProps={{
           title: "Data Pengurus",

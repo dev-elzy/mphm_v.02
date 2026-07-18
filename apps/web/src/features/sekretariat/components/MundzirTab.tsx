@@ -159,7 +159,7 @@ export function MundzirTab({ onViewDetail, isReadOnly = false }: MundzirTabProps
         onPageSizeChange={setPageSize}
         onSearch={setSearchQuery}
         loading={isLoading}
-        onRowClick={(row) => onViewDetail(row)}
+        onRowClick={(row) => handleOpenEdit(row as unknown as Pengurus)}
         tableName="mundzir"
         importExportProps={{
           title: "Data Mundzir",

@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { User } from "lucide-react";
+import { User, X } from "lucide-react";
 import { ColumnDef } from "@tanstack/react-table";
 import { UniversalDataGrid } from "@/components/data-grid/UniversalDataGrid";
 import { useGuardians, Guardian } from "../queries/useGuardians";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface SiswaTabProps {
   onViewDetail: (data: Record<string, unknown>) => void;
@@ -16,6 +17,7 @@ export function WaliSantriTab({ onViewDetail }: SiswaTabProps) {
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
+  const [detailData, setDetailData] = useState<Record<string, any> | null>(null);
 
   const { data: remoteData = { data: [], total: 0 }, isLoading } = useGuardians(searchQuery, pageIndex, pageSize);
   const [guardiansList, setGuardiansList] = useState<Guardian[]>([]);
@@ -107,7 +109,7 @@ export function WaliSantriTab({ onViewDetail }: SiswaTabProps) {
         onPageSizeChange={setPageSize}
         onSearch={setSearchQuery}
         loading={isLoading}
-        onRowClick={(row) => onViewDetail(row as unknown as Record<string, unknown>)}
+        onRowClick={(row) => setDetailData(row as unknown as Record<string, any>)}
         tableName="wali_santri"
         importExportProps={{
           title: "Data Wali Santri",
@@ -118,6 +120,50 @@ export function WaliSantriTab({ onViewDetail }: SiswaTabProps) {
           }
         }}
       />
+
+      {/* Detail Modal */}
+      <AnimatePresence>
+        {detailData && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/40 backdrop-blur-xs" onClick={() => setDetailData(null)} />
+            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-2xl shadow-xl z-10 flex flex-col overflow-hidden max-h-[85vh]">
+              <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex justify-between bg-zinc-50 dark:bg-zinc-800/30">
+                <h3 className="font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                  <User className="w-5 h-5 text-indigo-500" />
+                  Detail Wali Santri
+                </h3>
+                <button onClick={() => setDetailData(null)} className="text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 p-1 rounded-md transition-colors"><X className="w-5 h-5"/></button>
+              </div>
+              <div className="p-6 overflow-y-auto space-y-4 text-sm font-medium">
+                <table className="w-full border-collapse">
+                  <tbody>
+                    <tr className="border-b border-zinc-100 dark:border-zinc-800/60">
+                      <td className="py-2.5 pr-4 font-bold text-zinc-400 dark:text-zinc-500 capitalize w-1/3 text-left">Nama Wali</td>
+                      <td className="py-2.5 text-zinc-800 dark:text-zinc-200 text-left font-bold">{detailData.guardianName || "-"}</td>
+                    </tr>
+                    <tr className="border-b border-zinc-100 dark:border-zinc-800/60">
+                      <td className="py-2.5 pr-4 font-bold text-zinc-400 dark:text-zinc-500 capitalize w-1/3 text-left">Hubungan</td>
+                      <td className="py-2.5 text-zinc-800 dark:text-zinc-200 text-left">{detailData.relation || "-"}</td>
+                    </tr>
+                    <tr className="border-b border-zinc-100 dark:border-zinc-800/60">
+                      <td className="py-2.5 pr-4 font-bold text-zinc-400 dark:text-zinc-500 capitalize w-1/3 text-left">NIK</td>
+                      <td className="py-2.5 text-zinc-800 dark:text-zinc-200 text-left font-mono">{detailData.nik || "-"}</td>
+                    </tr>
+                    <tr className="border-b border-zinc-100 dark:border-zinc-800/60">
+                      <td className="py-2.5 pr-4 font-bold text-zinc-400 dark:text-zinc-500 capitalize w-1/3 text-left">No Telepon</td>
+                      <td className="py-2.5 text-zinc-800 dark:text-zinc-200 text-left font-mono">{detailData.phoneNumber || "-"}</td>
+                    </tr>
+                    <tr className="border-b border-zinc-100 dark:border-zinc-800/60">
+                      <td className="py-2.5 pr-4 font-bold text-zinc-400 dark:text-zinc-500 capitalize w-1/3 text-left">Nomor KK</td>
+                      <td className="py-2.5 text-zinc-800 dark:text-zinc-200 text-left font-mono">{detailData.familyCardNumber || "-"}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

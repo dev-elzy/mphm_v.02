@@ -305,7 +305,7 @@ export function KhidmahTab({ onViewDetail, isReadOnly = false, selectedYearId }:
         onPageSizeChange={setPageSize}
         onSearch={setSearchQuery}
         loading={isLoading}
-        onRowClick={onViewDetail ? ((row) => onViewDetail(row as unknown as Record<string, unknown>)) : undefined}
+        onRowClick={(row) => handleOpenEdit(row as any)}
         tableName="santri_khidmah"
         importExportProps={{
           title: `Data Induk - Masa Pengabdian (Khidmah)`,

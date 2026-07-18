@@ -178,7 +178,7 @@ export function KurikulumTab({ onViewDetail, isReadOnly = false }: KurikulumTabP
         pageIndex={0}
         pageSize={10}
         loading={isLoading}
-        onRowClick={(row) => onViewDetail(row as unknown as Record<string, unknown>)}
+        onRowClick={(row) => handleOpenEdit(row as unknown as Subject)}
         tableName="kurikulum"
         importExportProps={{
           title: "Kurikulum Builder & Silabus",

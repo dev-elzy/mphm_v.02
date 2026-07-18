@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { ColumnDef } from "@tanstack/react-table";
-import { Trash2, RefreshCcw } from "lucide-react";
+import { Trash2, RefreshCcw, X } from "lucide-react";
 import { UniversalDataGrid } from "@/components/data-grid/UniversalDataGrid";
 import { useToast } from "@/components/shared/ToastContext";
+import { motion, AnimatePresence } from "framer-motion";
 
 import { useRecycleBin, DeletedItem } from "../queries/useRecycleBin";
 
@@ -11,6 +13,7 @@ export function RecycleBinTab() {
   const { data: remoteData = [], isLoading, restoreItem, forceDeleteItem } = useRecycleBin();
   const data = remoteData;
   const { toast } = useToast();
+  const [detailData, setDetailData] = useState<Record<string, any> | null>(null);
 
   const handleRestore = async (id: string) => {
     if (confirm("Kembalikan data ini ke sistem aktif?")) {
@@ -64,7 +67,7 @@ export function RecycleBinTab() {
   ];
 
   return (
-    <div className="h-full flex flex-col p-4">
+    <div className="h-full flex flex-col p-4 mt-2">
       <UniversalDataGrid
         columns={columns}
         data={data}
@@ -72,8 +75,49 @@ export function RecycleBinTab() {
         pageIndex={0}
         pageSize={10}
         loading={isLoading}
+        onRowClick={(row) => setDetailData(row as unknown as Record<string, any>)}
         tableName="Data Recycling Bin"
       />
+
+      {/* Detail Modal */}
+      <AnimatePresence>
+        {detailData && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/40 backdrop-blur-xs" onClick={() => setDetailData(null)} />
+            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-2xl shadow-xl z-10 flex flex-col overflow-hidden max-h-[85vh]">
+              <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex justify-between bg-zinc-50 dark:bg-zinc-800/30">
+                <h3 className="font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                  <Trash2 className="w-5 h-5 text-rose-500" />
+                  Detail Sampah Data
+                </h3>
+                <button onClick={() => setDetailData(null)} className="text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 p-1 rounded-md transition-colors"><X className="w-5 h-5"/></button>
+              </div>
+              <div className="p-6 overflow-y-auto space-y-4 text-sm font-medium">
+                <table className="w-full border-collapse">
+                  <tbody>
+                    <tr className="border-b border-zinc-100 dark:border-zinc-800/60">
+                      <td className="py-2.5 pr-4 font-bold text-zinc-400 dark:text-zinc-500 w-1/3 text-left">Tipe Data</td>
+                      <td className="py-2.5 text-zinc-800 dark:text-zinc-200 text-left font-bold">{detailData.type || "-"}</td>
+                    </tr>
+                    <tr className="border-b border-zinc-100 dark:border-zinc-800/60">
+                      <td className="py-2.5 pr-4 font-bold text-zinc-400 dark:text-zinc-500 w-1/3 text-left">Nama / Identitas</td>
+                      <td className="py-2.5 text-zinc-800 dark:text-zinc-200 text-left font-bold">{detailData.name || "-"}</td>
+                    </tr>
+                    <tr className="border-b border-zinc-100 dark:border-zinc-800/60">
+                      <td className="py-2.5 pr-4 font-bold text-zinc-400 dark:text-zinc-500 w-1/3 text-left">Waktu Dihapus</td>
+                      <td className="py-2.5 text-zinc-800 dark:text-zinc-200 text-left font-mono">{detailData.deletedAt || "-"}</td>
+                    </tr>
+                    <tr className="border-b border-zinc-100 dark:border-zinc-800/60">
+                      <td className="py-2.5 pr-4 font-bold text-zinc-400 dark:text-zinc-500 w-1/3 text-left">Sisa Waktu</td>
+                      <td className="py-2.5 text-rose-600 dark:text-rose-400 text-left font-mono">{detailData.expiresAt || "-"}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

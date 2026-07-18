@@ -129,7 +129,7 @@ export function MustahiqTab({ onViewDetail, isReadOnly = false }: { onViewDetail
         onPageSizeChange={setPageSize}
         onSearch={setSearchQuery}
         loading={isLoading}
-        onRowClick={(row) => onViewDetail(row)}
+        onRowClick={(row) => handleOpenEdit(row as unknown as Guru)}
         tableName="mustahiq"
         importExportProps={{
           title: "Data Mustahiq",

@@ -188,7 +188,7 @@ export function PelanggaranTab({ onViewDetail, isReadOnly = false }: Pelanggaran
         pageSize={10}
         loading={isLoadingTypes}
         tableName="master_pelanggaran"
-        onRowClick={(row) => onViewDetail(row as unknown as Record<string, unknown>)}
+        onRowClick={(row) => handleOpenEdit(row as unknown as ViolationType)}
         importExportProps={{
           title: "Data Pelanggaran",
           headers: ["Nama Aturan Pelanggaran", "Kategori Kedisiplinan", "Tingkat Keparahan", "Poin Penalty"],

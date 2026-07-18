@@ -1,10 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { UniversalDataGrid } from "@/components/data-grid/UniversalDataGrid";
 import { PillBadge } from "@/components/shared/PillBadge";
 import { useAuditLog, AuditLog } from "@/features/sekretariat/queries/useAuditLog";
-import { Activity } from "lucide-react";
+import { Activity, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface AuditLogTabProps {
   onViewDetail: (data: Record<string, unknown>) => void;
@@ -12,6 +14,7 @@ interface AuditLogTabProps {
 
 export function AuditLogTab({ onViewDetail }: AuditLogTabProps) {
   const { data: logsList = [], isLoading } = useAuditLog();
+  const [detailData, setDetailData] = useState<Record<string, any> | null>(null);
 
   const columns: ColumnDef<AuditLog, unknown>[] = [
     {
@@ -72,9 +75,65 @@ export function AuditLogTab({ onViewDetail }: AuditLogTabProps) {
         pageIndex={0}
         pageSize={10}
         loading={isLoading}
-        onRowClick={(row) => onViewDetail(row as unknown as Record<string, unknown>)}
+        onRowClick={(row) => setDetailData(row as unknown as Record<string, any>)}
         tableName="audit_log"
       />
+
+      {/* Detail Modal */}
+      <AnimatePresence>
+        {detailData && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/40 backdrop-blur-xs" onClick={() => setDetailData(null)} />
+            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="w-full max-w-lg bg-white dark:bg-zinc-900 rounded-2xl shadow-xl z-10 flex flex-col overflow-hidden max-h-[85vh]">
+              <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex justify-between bg-zinc-50 dark:bg-zinc-800/30">
+                <h3 className="font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                  <Activity className="w-5 h-5 text-indigo-500" />
+                  Detail Jejak Digital Audit
+                </h3>
+                <button onClick={() => setDetailData(null)} className="text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 p-1 rounded-md transition-colors"><X className="w-5 h-5"/></button>
+              </div>
+              <div className="p-6 overflow-y-auto space-y-4 text-sm font-medium">
+                <table className="w-full border-collapse">
+                  <tbody>
+                    <tr className="border-b border-zinc-100 dark:border-zinc-800/60">
+                      <td className="py-2.5 pr-4 font-bold text-zinc-400 dark:text-zinc-500 w-1/3 text-left">Waktu</td>
+                      <td className="py-2.5 text-zinc-800 dark:text-zinc-200 text-left font-mono text-xs">{new Date(detailData.timestamp).toLocaleString("id-ID")}</td>
+                    </tr>
+                    <tr className="border-b border-zinc-100 dark:border-zinc-800/60">
+                      <td className="py-2.5 pr-4 font-bold text-zinc-400 dark:text-zinc-500 w-1/3 text-left">User ID (Pelaku)</td>
+                      <td className="py-2.5 text-zinc-800 dark:text-zinc-200 text-left font-mono">{detailData.userId || "-"}</td>
+                    </tr>
+                    <tr className="border-b border-zinc-100 dark:border-zinc-800/60">
+                      <td className="py-2.5 pr-4 font-bold text-zinc-400 dark:text-zinc-500 w-1/3 text-left">Role Pelaku</td>
+                      <td className="py-2.5 text-zinc-800 dark:text-zinc-200 text-left">{detailData.role || "-"}</td>
+                    </tr>
+                    <tr className="border-b border-zinc-100 dark:border-zinc-800/60">
+                      <td className="py-2.5 pr-4 font-bold text-zinc-400 dark:text-zinc-500 w-1/3 text-left">Modul</td>
+                      <td className="py-2.5 text-zinc-800 dark:text-zinc-200 text-left">{detailData.module || "-"}</td>
+                    </tr>
+                    <tr className="border-b border-zinc-100 dark:border-zinc-800/60">
+                      <td className="py-2.5 pr-4 font-bold text-zinc-400 dark:text-zinc-500 w-1/3 text-left">Metode HTTP</td>
+                      <td className="py-2.5 text-zinc-800 dark:text-zinc-200 text-left font-bold font-mono">{detailData.action || "-"}</td>
+                    </tr>
+                    <tr className="border-b border-zinc-100 dark:border-zinc-800/60">
+                      <td className="py-2.5 pr-4 font-bold text-zinc-400 dark:text-zinc-500 w-1/3 text-left">Path URL</td>
+                      <td className="py-2.5 text-zinc-800 dark:text-zinc-200 text-left font-mono text-xs">{detailData.targetPath || "-"}</td>
+                    </tr>
+                    <tr>
+                      <td className="py-2.5 pr-4 font-bold text-zinc-400 dark:text-zinc-500 w-1/3 text-left">Data Payload</td>
+                      <td className="py-2.5 text-zinc-800 dark:text-zinc-200 text-left">
+                        <pre className="bg-zinc-50 dark:bg-zinc-950 p-3 rounded-lg border border-zinc-100 dark:border-zinc-800 text-[10px] font-mono overflow-x-auto max-w-xs md:max-w-md">
+                          {detailData.details || "-"}
+                        </pre>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
