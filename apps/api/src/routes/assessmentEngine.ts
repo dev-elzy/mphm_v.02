@@ -5,6 +5,7 @@ import { eq, and } from "drizzle-orm";
 import { createDb, studentScores, subjects, academicClasses, curriculumSubjects, classEnrollments, studentProfiles, people } from "@mphm/db";
 import type { AppEnv } from "../types";
 import { requireRole, requireDataScope } from "../middlewares/rbacMiddleware";
+import { GradeService } from "../services/grade.service";
 
 const assessmentEngine = new Hono<AppEnv>();
 
@@ -35,78 +36,29 @@ assessmentEngine.post(
     }
     const data = c.req.valid("json");
     const db = createDb(c.env.DB);
+    const gradeService = new GradeService(db);
 
-    // THE SACRED GUARD — Ambil subjectType dari DATABASE, bukan frontend
-    const subject = await db
-      .select({ subjectType: subjects.subjectType })
-      .from(subjects)
-      .where(eq(subjects.id, data.subjectId))
-      .get();
+    try {
+      const result = await gradeService.saveScore({
+        classId,
+        studentId: data.studentId,
+        subjectId: data.subjectId,
+        kwartal: data.kwartal,
+        score: data.score,
+      });
 
-    if (!subject) {
+      return c.json({
+        status: "Success",
+        message: "Nilai berhasil disimpan",
+        data: result,
+      });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Gagal menyimpan nilai.";
       return c.json(
-        { status: "Validation Error", message: "Mata pelajaran tidak ditemukan." },
+        { status: "Validation Error", message, field: "score" },
         400
       );
     }
-
-    // Validasi Sacred Guard: Mapel SAKRAL maksimal skor 8
-    if (subject.subjectType === "MAPEL" && data.score > 8) {
-      return c.json(
-        {
-          status: "Validation Error",
-          message: "Nilai maksimal untuk Mapel adalah 8.",
-          field: "score",
-        },
-        400
-      );
-    }
-
-    // Upsert score (update jika sudah ada, insert jika belum)
-    const existing = await db
-      .select()
-      .from(studentScores)
-      .where(
-        and(
-          eq(studentScores.classId, classId),
-          eq(studentScores.studentId, data.studentId),
-          eq(studentScores.subjectId, data.subjectId),
-          eq(studentScores.kwartal, data.kwartal)
-        )
-      )
-      .get();
-
-    let result;
-    if (existing) {
-      result = await db
-        .update(studentScores)
-        .set({
-          score: data.score,
-          updatedAt: new Date(),
-        })
-        .where(eq(studentScores.id, existing.id))
-        .returning()
-        .get();
-    } else {
-      result = await db
-        .insert(studentScores)
-        .values({
-          classId,
-          studentId: data.studentId,
-          subjectId: data.subjectId,
-          kwartal: data.kwartal,
-          score: data.score,
-          updatedAt: new Date(),
-        })
-        .returning()
-        .get();
-    }
-
-    return c.json({
-      status: "Success",
-      message: "Nilai berhasil disimpan",
-      data: result,
-    });
   }
 );
 

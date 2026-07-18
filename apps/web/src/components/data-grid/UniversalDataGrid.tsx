@@ -188,7 +188,7 @@ export function UniversalDataGrid<TData, TValue>({
                 <tr
                   key={row.id}
                   onClick={() => onRowClick && onRowClick(row.original)}
-                  className={`transition-colors duration-150 ${onRowClick ? "cursor-pointer hover:bg-zinc-50/80 dark:hover:bg-zinc-850/40" : "hover:bg-zinc-50/70 dark:hover:bg-zinc-800/30"}`}
+                  className={`transition-colors duration-150 ${onRowClick ? "cursor-pointer hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40" : "hover:bg-zinc-50/70 dark:hover:bg-zinc-800/30"}`}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <td key={cell.id} className="px-6 py-4 text-zinc-700 dark:text-zinc-300 whitespace-nowrap text-center align-middle">
@@ -281,7 +281,7 @@ export function UniversalDataGrid<TData, TValue>({
           <button
             onClick={() => onPageChange?.(pageIndex + 1)}
             disabled={pageIndex >= pageCount - 1}
-            className="p-2 border border-zinc-200 dark:border-zinc-750 bg-white dark:bg-zinc-800 text-zinc-650 dark:text-zinc-300 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-all duration-200"
+            className="p-2 border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-600 dark:text-zinc-350 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-all duration-200"
           >
             <ChevronRight className="w-4 h-4" />
           </button>

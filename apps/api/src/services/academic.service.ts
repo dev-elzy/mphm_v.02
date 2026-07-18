@@ -91,24 +91,27 @@ export class AcademicService {
       throw new Error(`Kapasitas rombel tidak mencukupi. Kapasitas maksimum: ${targetClass.capacity}, Terisi: ${enrolledCount}, Tambahan: ${studentIds.length}`);
     }
 
-    const insertedEnrollments = [];
+    const batchOps = [];
     for (const studentId of studentIds) {
-      // Nonaktifkan enrollment aktif siswa di kelas lain pada tahun ajaran yang sama jika ada
-      // Tapi untuk simplicity rombel awal kita asumsikan siswa belum punya kelas aktif lain
-      const res = await this.db
-        .insert(classEnrollments)
-        .values({
-          classId,
-          studentId,
-          status: "ACTIVE",
-          enrolledAt: new Date(),
-        })
-        .returning()
-        .get();
-      insertedEnrollments.push(res);
+      batchOps.push(
+        this.db
+          .insert(classEnrollments)
+          .values({
+            classId,
+            studentId,
+            status: "ACTIVE",
+            enrolledAt: new Date(),
+          })
+          .returning()
+      );
     }
 
-    return insertedEnrollments;
+    if (batchOps.length === 0) {
+      return [];
+    }
+
+    const results = await this.db.batch(batchOps as any);
+    return results.flat();
   }
 
   // ============================================================

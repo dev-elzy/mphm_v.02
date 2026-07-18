@@ -16,55 +16,64 @@ export class AttendanceService {
     records: { studentId: string; status: "HADIR" | "SAKIT" | "IZIN" | "ALFA"; notes?: string }[];
     recordedBy: string;
   }) {
-    const savedRecords = [];
+    // 1. Fetch all existing attendance records for this class/date/session in a single query
+    const existingRecords = await this.db
+      .select({ id: attendanceRecords.id, studentId: attendanceRecords.studentId })
+      .from(attendanceRecords)
+      .where(
+        and(
+          eq(attendanceRecords.classId, data.classId),
+          eq(attendanceRecords.date, data.date),
+          eq(attendanceRecords.session, data.session)
+        )
+      )
+      .all();
+
+    const existingMap = new Map(existingRecords.map(r => [r.studentId, r.id]));
+    const batchOps = [];
 
     for (const record of data.records) {
-      // Cari record absensi yang sudah ada
-      const existing = await this.db
-        .select()
-        .from(attendanceRecords)
-        .where(
-          and(
-            eq(attendanceRecords.classId, data.classId),
-            eq(attendanceRecords.studentId, record.studentId),
-            eq(attendanceRecords.date, data.date),
-            eq(attendanceRecords.session, data.session)
-          )
-        )
-        .get();
+      const existingId = existingMap.get(record.studentId);
 
-      if (existing) {
-        const res = await this.db
-          .update(attendanceRecords)
-          .set({
-            status: record.status,
-            notes: record.notes || null,
-            recordedBy: data.recordedBy,
-          })
-          .where(eq(attendanceRecords.id, existing.id))
-          .returning()
-          .get();
-        savedRecords.push(res);
+      if (existingId) {
+        batchOps.push(
+          this.db
+            .update(attendanceRecords)
+            .set({
+              status: record.status,
+              notes: record.notes || null,
+              recordedBy: data.recordedBy,
+            })
+            .where(eq(attendanceRecords.id, existingId))
+            .returning()
+        );
       } else {
-        const res = await this.db
-          .insert(attendanceRecords)
-          .values({
-            academicYearId: data.academicYearId,
-            classId: data.classId,
-            studentId: record.studentId,
-            date: data.date,
-            session: data.session,
-            status: record.status,
-            notes: record.notes || null,
-            recordedBy: data.recordedBy,
-          })
-          .returning()
-          .get();
-        savedRecords.push(res);
+        batchOps.push(
+          this.db
+            .insert(attendanceRecords)
+            .values({
+              academicYearId: data.academicYearId,
+              classId: data.classId,
+              studentId: record.studentId,
+              date: data.date,
+              session: data.session,
+              status: record.status,
+              notes: record.notes || null,
+              recordedBy: data.recordedBy,
+            })
+            .returning()
+        );
       }
     }
 
-    return savedRecords;
+    if (batchOps.length === 0) {
+      return [];
+    }
+
+    // Execute atomic batch transaction
+    const results = await this.db.batch(batchOps as any);
+    // Flatten result arrays from batch operation returning() statements
+    return results.flat();
   }
 
   // ============================================================

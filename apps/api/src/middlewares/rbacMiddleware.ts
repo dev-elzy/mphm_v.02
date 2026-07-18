@@ -2,18 +2,10 @@ import { Context, Next } from "hono";
 import type { AppEnv } from "../types";
 
 // ============================================================
-// 6 PERAN RESMI SISTEM (System Rule #02)
-// ============================================================
-export const VALID_ROLES = [
-  "Sekretariat",
-  "Mustahiq",
-  "Mufattisy",
-  "Mundzir",
-  "Petugas Keamanan",
-  "Wali Santri",
-] as const;
+import { ROLES, RoleType } from "@mphm/utils";
 
-export type ValidRole = typeof VALID_ROLES[number];
+export const VALID_ROLES = ROLES;
+export type ValidRole = RoleType;
 
 // ============================================================
 // RBAC MIDDLEWARE — Pembatasan berdasarkan peran

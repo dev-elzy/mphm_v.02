@@ -86,10 +86,26 @@ academicWorkspace.put(
     }
     const db = createDb(c.env.DB);
 
-    // Nonaktifkan semua tahun ajaran lain
+    // Cek apakah tahun ajaran ini ada dan belum ditutup
+    const year = await db
+      .select()
+      .from(academicYears)
+      .where(eq(academicYears.id, id))
+      .get();
+
+    if (!year) {
+      return c.json({ status: "Error", message: "Tahun Ajaran tidak ditemukan" }, 404);
+    }
+
+    if (year.isClosed) {
+      return c.json({ status: "Error", message: "Tidak dapat mengaktifkan Tahun Ajaran yang sudah dikunci/ditutup." }, 400);
+    }
+
+    // Nonaktifkan semua tahun ajaran lain yang aktif
     await db
       .update(academicYears)
-      .set({ isActive: false });
+      .set({ isActive: false })
+      .where(eq(academicYears.isActive, true));
 
     // Aktifkan yang dipilih
     const updated = await db
@@ -100,7 +116,7 @@ academicWorkspace.put(
       .get();
 
     if (!updated) {
-      return c.json({ status: "Error", message: "Tahun Ajaran tidak ditemukan" }, 404);
+      return c.json({ status: "Error", message: "Gagal mengaktifkan Tahun Ajaran" }, 500);
     }
 
     return c.json({
@@ -157,6 +173,15 @@ academicWorkspace.put(
       return c.json({ status: "Error", message: "id is required" }, 400);
     }
     const db = createDb(c.env.DB);
+
+    const existing = await db
+      .select()
+      .from(academicYears)
+      .where(eq(academicYears.id, id))
+      .get();
+    if (existing) {
+      c.set("auditBeforeData", existing);
+    }
 
     const updated = await db
       .update(academicYears)

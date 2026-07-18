@@ -26,9 +26,10 @@ export class GradeService {
       throw new Error("Mata pelajaran tidak ditemukan.");
     }
 
-    // Sacred Guard: Max 8 untuk Mapel
-    if (subject.subjectType === "MAPEL" && data.score > 8) {
-      throw new Error("Validation Error: Nilai maksimal untuk Mapel adalah 8.");
+    // Sacred Guard: Max 10 untuk Mapel, Max 8 untuk Non-Mapel
+    const maxAllowed = subject.subjectType === "MAPEL" ? 10 : 8;
+    if (data.score > maxAllowed) {
+      throw new Error(`Validation Error: Nilai maksimal untuk ${subject.subjectType === "MAPEL" ? "Mapel" : "Non-Mapel"} adalah ${maxAllowed}.`);
     }
 
     // Upsert logic

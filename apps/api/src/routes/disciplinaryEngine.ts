@@ -10,6 +10,8 @@ const disciplinaryEngine = new Hono<AppEnv>();
 
 disciplinaryEngine.get("/violations", requireRole(["Sekretariat", "Mustahiq", "Mufattisy", "Mundzir", "Petugas Keamanan"]), async (c) => {
   const academicYearId = c.req.query("academicYearId") || undefined;
+  const limit = parseInt(c.req.query("limit") || "50", 10);
+  const offset = parseInt(c.req.query("offset") || "0", 10);
   const db = createDb(c.env.DB);
 
   const result = await db.run(sql`
@@ -36,6 +38,7 @@ disciplinaryEngine.get("/violations", requireRole(["Sekretariat", "Mustahiq", "M
     INNER JOIN violation_severities vs ON vt.severity_id = vs.id
     ${academicYearId ? sql`WHERE sv.academic_year_id = ${academicYearId}` : sql``}
     ORDER BY sv.incident_date DESC, sv.incident_time DESC
+    LIMIT ${limit} OFFSET ${offset}
   `);
   const list = result.results || [];
   return c.json({ status: "Success", data: list });
@@ -125,6 +128,8 @@ disciplinaryEngine.put(
     if (!latestHistory) {
       return c.json({ status: "Error", message: "Riwayat akademik siswa tidak ditemukan untuk di-override." }, 404);
     }
+
+    c.set("auditBeforeData", latestHistory);
 
     const updated = await db
       .update(academicHistory)

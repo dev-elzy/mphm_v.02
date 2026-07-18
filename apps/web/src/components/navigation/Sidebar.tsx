@@ -32,7 +32,7 @@ interface OnboardingStatus {
 export function Sidebar({ role }: { role: RoleTypes }) {
   const pathname = usePathname();
   const [customItems, setCustomItems] = useState<CustomNavItem[]>([]);
-  const { config } = useRoleUIConfig(role);
+  const { config, accentColorClasses } = useRoleUIConfig(role);
   const { toast } = useToast();
   const [onboardingStatus, setOnboardingStatus] = useState<OnboardingStatus>({
     hasMundzir: true,
@@ -108,25 +108,34 @@ export function Sidebar({ role }: { role: RoleTypes }) {
     navItems = [...filteredStaticItems];
   }
 
+  const isMenuLocked = (href: string): boolean => {
+    if (role !== "sekretariat") return false;
+    if (href === "/sekretariat/mufattisy" && !onboardingStatus.hasMundzir) return true;
+    if (href === "/sekretariat/mustahiq" && (!onboardingStatus.hasMundzir || !onboardingStatus.hasMufattisy)) return true;
+    if (href === "/sekretariat/kelas" && !onboardingStatus.hasMustahiq) return true;
+    if (href === "/sekretariat/santri" && !onboardingStatus.hasClasses) return true;
+    return false;
+  };
+
   const checkAccess = (e: React.MouseEvent, href: string) => {
     if (role !== "sekretariat" || loadingStatus) return;
 
-    if (href.includes("/mufattisy") && !onboardingStatus.hasMundzir) {
+    if (href === "/sekretariat/mufattisy" && !onboardingStatus.hasMundzir) {
       e.preventDefault();
       toast("Harap isi Data Mundzir terlebih dahulu!", "warning", "Data Belum Lengkap");
       return;
     }
-    if (href.includes("/mustahiq") && (!onboardingStatus.hasMundzir || !onboardingStatus.hasMufattisy)) {
+    if (href === "/sekretariat/mustahiq" && (!onboardingStatus.hasMundzir || !onboardingStatus.hasMufattisy)) {
       e.preventDefault();
       toast("Harap isi Data Mufattisy terlebih dahulu!", "warning", "Data Belum Lengkap");
       return;
     }
-    if (href.includes("/kelas") && (!onboardingStatus.hasMustahiq)) {
+    if (href === "/sekretariat/kelas" && !onboardingStatus.hasMustahiq) {
       e.preventDefault();
       toast("Harap isi Data Mustahiq terlebih dahulu!", "warning", "Data Belum Lengkap");
       return;
     }
-    if (href.includes("/santri") && (!onboardingStatus.hasClasses)) {
+    if (href === "/sekretariat/santri" && !onboardingStatus.hasClasses) {
       e.preventDefault();
       toast("Harap isi Data Kelas terlebih dahulu!", "warning", "Data Belum Lengkap");
       return;
@@ -166,22 +175,17 @@ export function Sidebar({ role }: { role: RoleTypes }) {
                         onClick={(e) => checkAccess(e, subItem.href)}
                         className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group relative overflow-hidden ${
                           isActive
-                            ? "bg-blue-600/10 text-blue-400 font-semibold shadow-inner border border-blue-500/20"
+                            ? `${accentColorClasses.bg} ${accentColorClasses.text} font-semibold shadow-inner border ${accentColorClasses.border}`
                             : "text-slate-400 hover:bg-slate-900 hover:text-slate-200"
                         }`}
                       >
-                        {isActive && <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500 rounded-r-full shadow-[0_0_8px_rgba(59,130,246,0.8)]" />}
+                        {isActive && <div className={`absolute left-0 top-0 bottom-0 w-1 ${accentColorClasses.primary.split(" ")[0]} rounded-r-full`} />}
                         <subItem.icon 
                           strokeWidth={isActive ? 2 : 1.5} 
-                          className={`w-5 h-5 z-10 transition-colors ${isActive ? "text-blue-400" : "text-slate-500 group-hover:text-slate-300"}`}
+                          className={`w-5 h-5 z-10 transition-colors ${isActive ? accentColorClasses.text : "text-slate-500 group-hover:text-slate-300"}`}
                         />
                         <span className="text-sm z-10 flex-1">{subItem.label}</span>
-                        {role === "sekretariat" && !loadingStatus && (
-                           (subItem.href.includes("/mufattisy") && !onboardingStatus.hasMundzir) ||
-                           (subItem.href.includes("/mustahiq") && !onboardingStatus.hasMufattisy) ||
-                           (subItem.href.includes("/kelas") && !onboardingStatus.hasMustahiq) ||
-                           (subItem.href.includes("/santri") && !onboardingStatus.hasClasses)
-                        ) && (
+                        {role === "sekretariat" && !loadingStatus && isMenuLocked(subItem.href) && (
                           <Lock className="w-3 h-3 text-red-400/70" />
                         )}
                       </Link>
@@ -205,22 +209,17 @@ export function Sidebar({ role }: { role: RoleTypes }) {
               onClick={(e) => checkAccess(e, item.href)}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group relative overflow-hidden ${
                 isActive
-                  ? "bg-blue-600/10 text-blue-400 font-semibold shadow-inner border border-blue-500/20"
+                  ? `${accentColorClasses.bg} ${accentColorClasses.text} font-semibold shadow-inner border ${accentColorClasses.border}`
                   : "text-slate-400 hover:bg-slate-900 hover:text-slate-200"
               }`}
             >
-              {isActive && <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500 rounded-r-full shadow-[0_0_8px_rgba(59,130,246,0.8)]" />}
+              {isActive && <div className={`absolute left-0 top-0 bottom-0 w-1 ${accentColorClasses.primary.split(" ")[0]} rounded-r-full`} />}
               <item.icon 
                 strokeWidth={isActive ? 2 : 1.5} 
-                className={`w-5 h-5 z-10 transition-colors ${isActive ? "text-blue-400" : "text-slate-500 group-hover:text-slate-300"}`}
+                className={`w-5 h-5 z-10 transition-colors ${isActive ? accentColorClasses.text : "text-slate-500 group-hover:text-slate-300"}`}
               />
               <span className="text-sm z-10 flex-1">{item.label}</span>
-              {role === "sekretariat" && !loadingStatus && (
-                  (item.href.includes("/mufattisy") && !onboardingStatus.hasMundzir) ||
-                  (item.href.includes("/mustahiq") && !onboardingStatus.hasMufattisy) ||
-                  (item.href.includes("/kelas") && !onboardingStatus.hasMustahiq) ||
-                  (item.href.includes("/santri") && !onboardingStatus.hasClasses)
-              ) && (
+              {role === "sekretariat" && !loadingStatus && isMenuLocked(item.href) && (
                 <Lock className="w-3 h-3 text-red-400/70" />
               )}
             </Link>

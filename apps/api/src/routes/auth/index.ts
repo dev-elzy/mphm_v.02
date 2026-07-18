@@ -7,6 +7,7 @@ import { createDb, userAccounts, userSessions, people, teacherProfiles, guardian
 import type { AppEnv } from "../../types";
 import { requireAuth } from "../../middlewares/authMiddleware";
 import { deleteFromCloudinary } from "../../utils/cloudinary";
+import { rotateSessionIfStale } from "../../utils/session";
 
 const auth = new Hono<AppEnv>();
 
@@ -232,6 +233,14 @@ auth.post(
 
     const isDefaultPassword = password === "mphm123";
 
+    try {
+      await c.env.SESSION_KV.put(`session_must_change_pwd:${sessionToken}`, String(isDefaultPassword), {
+        expirationTtl: 3600
+      });
+    } catch (e) {
+      console.error("Failed to write password status to KV", e);
+    }
+
     return c.json({
       status: "Success",
       message: "Login berhasil",
@@ -261,6 +270,13 @@ auth.post("/logout", async (c) => {
     await db
       .delete(userSessions)
       .where(eq(userSessions.sessionToken, sessionToken));
+
+    // Clear KV cache
+    try {
+      await c.env.SESSION_KV.delete(`session_must_change_pwd:${sessionToken}`);
+    } catch (e) {
+      console.error("Failed to delete password status from KV", e);
+    }
   }
 
   // Clear cookie
@@ -310,20 +326,8 @@ auth.get("/me", async (c) => {
   }
 
   // Session Rotation Logic (if older than 30 mins)
-  const sessionAge = now.getTime() - (session.createdAt?.getTime() || 0);
-  const THIRTY_MINUTES = 30 * 60 * 1000;
-  if (sessionAge > THIRTY_MINUTES) {
-    const buffer = new Uint8Array(32);
-    crypto.getRandomValues(buffer);
-    const newToken = Array.from(buffer, (b) => b.toString(16).padStart(2, "0")).join("");
-    const newExpiry = new Date(now.getTime() + 3600000);
-    
-    await db.update(userSessions).set({ sessionToken: newToken, expiresAt: newExpiry }).where(eq(userSessions.id, session.id));
-    setCookie(c, "session_token", newToken, {
-      httpOnly: true, secure: true, sameSite: "None", path: "/", maxAge: 3600,
-      domain: "m.p3hm.my.id",
-    });
-  }
+  const rotationResult = await rotateSessionIfStale(db, session, c);
+  const activeToken = rotationResult.newToken;
 
   // Get full person data
   const person = await db
@@ -352,7 +356,20 @@ auth.get("/me", async (c) => {
     }
   }
 
-  const isDefaultPassword = await verifyPassword("mphm123", account.passwordHash);
+  let isDefaultPassword = false;
+  try {
+    const cached = await c.env.SESSION_KV.get(`session_must_change_pwd:${activeToken}`);
+    if (cached !== null) {
+      isDefaultPassword = cached === "true";
+    } else {
+      isDefaultPassword = await verifyPassword("mphm123", account.passwordHash);
+      await c.env.SESSION_KV.put(`session_must_change_pwd:${activeToken}`, String(isDefaultPassword), {
+        expirationTtl: 3600
+      });
+    }
+  } catch (e) {
+    isDefaultPassword = await verifyPassword("mphm123", account.passwordHash);
+  }
 
   return c.json({
     status: "Success",
@@ -409,6 +426,17 @@ auth.put("/profile", requireAuth, zValidator("json", profileUpdateSchema), async
     await db.update(userAccounts)
       .set({ passwordHash: newPasswordHash, updatedAt: new Date() })
       .where(eq(userAccounts.id, user.userId));
+
+    try {
+      const currentToken = getCookie(c, "session_token");
+      if (currentToken) {
+        await c.env.SESSION_KV.put(`session_must_change_pwd:${currentToken}`, "false", {
+          expirationTtl: 3600
+        });
+      }
+    } catch (e) {
+      console.error("Failed to update password status in KV", e);
+    }
   }
 
   // 3. Update nama lengkap dan foto profil (Avatar) di tabel people

@@ -5,7 +5,17 @@ import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { NAVIGATION_CONFIG, RoleTypes, NavItem } from "../../config/navigation.config";
-import { Database } from "lucide-react";
+import { Database, Lock } from "lucide-react";
+import { useToast } from "@/components/shared/ToastContext";
+import { apiRequest } from "@/lib/api";
+
+export interface OnboardingStatus {
+  hasMundzir: boolean;
+  hasMufattisy: boolean;
+  hasMustahiq: boolean;
+  hasClasses: boolean;
+  hasSantri: boolean;
+}
 
 interface CustomNavItem {
   label: string;
@@ -24,6 +34,67 @@ export function BottomNav({ role, forceShow = false }: { role: RoleTypes, forceS
   const pathname = usePathname();
   const [customItems, setCustomItems] = useState<CustomNavItem[]>([]);
   const { config, accentColorClasses } = useRoleUIConfig(role);
+  const { toast } = useToast();
+  const [onboardingStatus, setOnboardingStatus] = useState<OnboardingStatus>({
+    hasMundzir: true,
+    hasMufattisy: true,
+    hasMustahiq: true,
+    hasClasses: true,
+    hasSantri: true
+  });
+  const [loadingStatus, setLoadingStatus] = useState(role !== "sekretariat" ? false : true);
+
+  useEffect(() => {
+    const fetchStatus = async () => {
+      try {
+        const res = await apiRequest<{ data: OnboardingStatus }>("/api/admin/onboarding/status");
+        if (res?.data) {
+          setOnboardingStatus(res.data);
+        }
+      } catch (err) {
+        console.error("Failed to load onboarding status", err);
+      } finally {
+        setLoadingStatus(false);
+      }
+    };
+    if (role === "sekretariat") {
+      fetchStatus();
+    }
+  }, [role]);
+
+  const isMenuLocked = (href: string): boolean => {
+    if (role !== "sekretariat") return false;
+    if (href === "/sekretariat/mufattisy" && !onboardingStatus.hasMundzir) return true;
+    if (href === "/sekretariat/mustahiq" && (!onboardingStatus.hasMundzir || !onboardingStatus.hasMufattisy)) return true;
+    if (href === "/sekretariat/kelas" && !onboardingStatus.hasMustahiq) return true;
+    if (href === "/sekretariat/santri" && !onboardingStatus.hasClasses) return true;
+    return false;
+  };
+
+  const checkAccess = (e: React.MouseEvent, href: string) => {
+    if (role !== "sekretariat" || loadingStatus) return;
+
+    if (href === "/sekretariat/mufattisy" && !onboardingStatus.hasMundzir) {
+      e.preventDefault();
+      toast("Harap isi Data Mundzir terlebih dahulu!", "warning", "Data Belum Lengkap");
+      return;
+    }
+    if (href === "/sekretariat/mustahiq" && (!onboardingStatus.hasMundzir || !onboardingStatus.hasMufattisy)) {
+      e.preventDefault();
+      toast("Harap isi Data Mufattisy terlebih dahulu!", "warning", "Data Belum Lengkap");
+      return;
+    }
+    if (href === "/sekretariat/kelas" && !onboardingStatus.hasMustahiq) {
+      e.preventDefault();
+      toast("Harap isi Data Mustahiq terlebih dahulu!", "warning", "Data Belum Lengkap");
+      return;
+    }
+    if (href === "/sekretariat/santri" && !onboardingStatus.hasClasses) {
+      e.preventDefault();
+      toast("Harap isi Data Kelas terlebih dahulu!", "warning", "Data Belum Lengkap");
+      return;
+    }
+  };
 
   useEffect(() => {
     const loadCustomTables = () => {
@@ -93,15 +164,21 @@ export function BottomNav({ role, forceShow = false }: { role: RoleTypes, forceS
             <Link
               key={item.href}
               href={item.href}
+              onClick={(e) => checkAccess(e, item.href)}
               className="relative flex flex-col items-center justify-center w-full h-full"
             >
               <div className="relative flex flex-col items-center justify-center p-2 z-10">
-                <item.icon 
-                  strokeWidth={isActive ? 2.5 : 1.5}
-                  className={`w-6 h-6 mb-1 transition-colors ${
-                    isActive ? accentColorClasses.text : "text-zinc-500 dark:text-zinc-400"
-                  }`} 
-                />
+                <div className="relative">
+                  <item.icon 
+                    strokeWidth={isActive ? 2.5 : 1.5}
+                    className={`w-6 h-6 mb-1 transition-colors ${
+                      isActive ? accentColorClasses.text : "text-zinc-500 dark:text-zinc-400"
+                    }`} 
+                  />
+                  {role === "sekretariat" && !loadingStatus && isMenuLocked(item.href) && (
+                    <Lock className="absolute -top-1 -right-2 w-3 h-3 text-red-500" />
+                  )}
+                </div>
                 <span className={`text-[10px] font-medium transition-colors ${
                   isActive ? accentColorClasses.text : "text-zinc-500 dark:text-zinc-400"
                 }`}>

@@ -43,6 +43,12 @@ export default function DashboardLayout({
       return;
     }
 
+    // Jika role tidak dikenal, redirect ke login
+    if (!roleInfo) {
+      router.replace("/?error=invalid_role");
+      return;
+    }
+
     // User mengakses dashboard yang bukan milik role-nya → redirect ke dashboard yang benar
     const isOnCorrectPath = pathname === correctBasePath || pathname.startsWith(correctBasePath + "/");
 
@@ -55,7 +61,7 @@ export default function DashboardLayout({
         router.replace(correctBasePath);
       }
     }
-  }, [isLoading, user, pathname, correctBasePath, router]);
+  }, [isLoading, user, roleInfo, pathname, correctBasePath, router]);
 
   if (isLoading) {
     return (
@@ -66,6 +72,10 @@ export default function DashboardLayout({
         </div>
       </div>
     );
+  }
+
+  if (!user || !roleInfo) {
+    return null;
   }
 
   return (

@@ -1,8 +1,8 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
-import { createDb, academicYears, academicHistory, classEnrollments, studentProfiles } from "@mphm/db";
-import { eq, and, sql } from "drizzle-orm";
+import { createDb, academicYears, academicHistory, classEnrollments, studentProfiles, academicClasses } from "@mphm/db";
+import { eq, and, sql, inArray } from "drizzle-orm";
 import type { AppEnv } from "../types";
 import { requireRole } from "../middlewares/rbacMiddleware";
 
@@ -29,6 +29,18 @@ promotionEngine.get(
     }
     const db = createDb(c.env.DB);
 
+    const classData = await db
+      .select({ academicYearId: academicClasses.academicYearId })
+      .from(academicClasses)
+      .where(eq(academicClasses.id, classId))
+      .get();
+
+    if (!classData) {
+      return c.json({ status: "Error", message: "Kelas tidak ditemukan" }, 404);
+    }
+
+    const yearId = classData.academicYearId;
+
     // Ambil daftar santri aktif di kelas tersebut beserta rata-rata nilai dan kehadiran
     const result = await db.run(sql`
       SELECT 
@@ -47,17 +59,19 @@ promotionEngine.get(
       INNER JOIN student_profiles sp ON ce.student_id = sp.id
       INNER JOIN people p ON sp.person_id = p.id
       LEFT JOIN (
-        SELECT student_id, avg(score) as score
+        SELECT ss.student_id, avg(ss.score) as score
         FROM student_scores ss
         INNER JOIN subjects s ON ss.subject_id = s.id
-        WHERE s.subject_type = 'NON_MAPEL'
-        GROUP BY student_id
+        INNER JOIN academic_classes ac ON ss.class_id = ac.id
+        WHERE s.subject_type = 'NON_MAPEL' AND ac.academic_year_id = ${yearId}
+        GROUP BY ss.student_id
       ) avg_score ON avg_score.student_id = sp.id
       LEFT JOIN (
-        SELECT student_id, 
-               cast(sum(case when status in ('HADIR', 'SAKIT', 'IZIN') then 1 else 0 end) as float) / count(*) as rate
-        FROM attendance_records
-        GROUP BY student_id
+        SELECT ar.student_id, 
+               cast(sum(case when ar.status in ('HADIR', 'SAKIT', 'IZIN') then 1 else 0 end) as float) / count(*) as rate
+        FROM attendance_records ar
+        WHERE ar.academic_year_id = ${yearId}
+        GROUP BY ar.student_id
       ) att_rate ON att_rate.student_id = sp.id
       WHERE ce.class_id = ${classId} AND ce.status = 'ACTIVE'
     `);
@@ -108,51 +122,67 @@ promotionEngine.post(
 
     const transactionId = crypto.randomUUID();
 
+    const studentIds = promotionCandidates.map(c => c.studentId);
+    
+    // Ambil all active enrollments in one query
+    const activeEnrollments = studentIds.length > 0 
+      ? await db
+          .select({
+            studentId: classEnrollments.studentId,
+            classId: classEnrollments.classId,
+          })
+          .from(classEnrollments)
+          .where(
+            and(
+              inArray(classEnrollments.studentId, studentIds),
+              eq(classEnrollments.status, "ACTIVE")
+            )
+          )
+          .all()
+      : [];
+
+    const enrollmentMap = new Map(activeEnrollments.map(e => [e.studentId, e.classId]));
+    const batchOps = [];
+
     // Simpan history akademik dan update status santri
     for (const candidate of promotionCandidates) {
-      // 1. Dapatkan kelas terakhir siswa
-      const enrollment = await db
-        .select({
-          classId: classEnrollments.classId
+      const classId = enrollmentMap.get(candidate.studentId) || "unknown-class";
+
+      // 1. Insert ke academic_history (Append-Only)
+      batchOps.push(
+        db.insert(academicHistory).values({
+          studentId: candidate.studentId,
+          academicYearId: academicYearId,
+          institutionLevel: year.name, // atau ambil level dari kelas jika diperlukan
+          classId: classId,
+          status: candidate.status,
+          promotionTransactionId: transactionId,
+          overrideReason: candidate.overrideReason || null,
         })
-        .from(classEnrollments)
-        .where(
-          and(
-            eq(classEnrollments.studentId, candidate.studentId),
-            eq(classEnrollments.status, "ACTIVE")
-          )
-        )
-        .get();
+      );
 
-      const classId = enrollment?.classId || "unknown-class";
-
-      // 2. Insert ke academic_history (Append-Only)
-      await db.insert(academicHistory).values({
-        studentId: candidate.studentId,
-        academicYearId: academicYearId,
-        institutionLevel: year.name, // atau ambil level dari kelas jika diperlukan
-        classId: classId,
-        status: candidate.status,
-        promotionTransactionId: transactionId,
-        overrideReason: candidate.overrideReason || null,
-      });
-
-      // 3. Update profil student
-      await db
-        .update(studentProfiles)
-        .set({
-          status: candidate.status === "GRADUATED" ? "GRADUATED" : 
-                  candidate.status === "KHIDMAH" ? "KHIDMAH" : 
-                  candidate.status === "DROPPED" ? "DROPPED" : "ACTIVE"
-        })
-        .where(eq(studentProfiles.id, candidate.studentId));
+      // 2. Update profil student
+      const newStatus = candidate.status === "GRADUATED" ? "GRADUATED" : 
+                        candidate.status === "KHIDMAH" ? "KHIDMAH" : 
+                        candidate.status === "DROPPED" ? "DROPPED" : "ACTIVE";
+      batchOps.push(
+        db.update(studentProfiles)
+          .set({ status: newStatus })
+          .where(eq(studentProfiles.id, candidate.studentId))
+      );
     }
 
-    // Kunci Tahun Ajaran (isClosed = true)
-    await db
-      .update(academicYears)
-      .set({ isClosed: true, isActive: false })
-      .where(eq(academicYears.id, academicYearId));
+    // 3. Kunci Tahun Ajaran (isClosed = true)
+    batchOps.push(
+      db.update(academicYears)
+        .set({ isClosed: true, isActive: false })
+        .where(eq(academicYears.id, academicYearId))
+    );
+
+    // Execute atomic batch transaction
+    if (batchOps.length > 0) {
+      await db.batch(batchOps as any);
+    }
 
     return c.json({ 
       status: "Success", 

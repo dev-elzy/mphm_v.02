@@ -3,6 +3,7 @@ import { getCookie, setCookie } from "hono/cookie";
 import { eq, and, gt } from "drizzle-orm";
 import { createDb, userSessions, userAccounts, teacherProfiles, guardianProfiles, academicClasses, academicYears } from "@mphm/db";
 import type { AppEnv, SessionPayload } from "../types";
+import { rotateSessionIfStale } from "../utils/session";
 
 // ============================================================
 // AUTH MIDDLEWARE — Verifikasi Session Cookie dari D1
@@ -107,35 +108,7 @@ export const requireAuth = async (c: Context<AppEnv>, next: Next) => {
   }
 
   // 5. Session Rotation — Jika session lebih tua dari 30 menit, rotate token
-  const sessionAge = now.getTime() - (session.createdAt?.getTime() || 0);
-  const THIRTY_MINUTES = 30 * 60 * 1000;
-
-  if (sessionAge > THIRTY_MINUTES) {
-    // Generate token baru
-    const buffer = new Uint8Array(32);
-    crypto.getRandomValues(buffer);
-    const newToken = Array.from(buffer, (b) => b.toString(16).padStart(2, "0")).join("");
-    const newExpiry = new Date(now.getTime() + 3600000); // 1 jam dari sekarang
-
-    // Update session di D1
-    await db
-      .update(userSessions)
-      .set({
-        sessionToken: newToken,
-        expiresAt: newExpiry,
-      })
-      .where(eq(userSessions.id, session.id));
-
-    // Set cookie baru
-    setCookie(c, "session_token", newToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "None",
-      path: "/",
-      maxAge: 3600,
-      domain: c.env.ENVIRONMENT === "production" ? "m.p3hm.my.id" : undefined,
-    });
-  }
+  await rotateSessionIfStale(db, session, c);
 
   // 6. Set user di context
   c.set("user", payload);

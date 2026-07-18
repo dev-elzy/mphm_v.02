@@ -5,8 +5,12 @@ export interface AcademicClass {
   id: string;
   name: string;
   mustahiq: string;
-  mufattisy: string;
+  mufattisy?: string;
   capacity: number;
+  institutionLevel?: string;
+  classLevel?: string;
+  section?: string;
+  mustahiqId?: string;
 }
 
 export function useClasses(academicYearId?: string) {

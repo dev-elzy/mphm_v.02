@@ -29,8 +29,10 @@ export function ImportExportToolbar({
 
   // 1. Download Template Excel (Header locked, comments added)
   const handleDownloadTemplate = async () => {
-    const ExcelJS = await import("exceljs");
-    const { saveAs } = await import("file-saver");
+    const ExcelJSMod = await import("exceljs");
+    const ExcelJS = ExcelJSMod.default || ExcelJSMod;
+    const fileSaver = await import("file-saver");
+    const saveAs = fileSaver.saveAs || (fileSaver as any).default || fileSaver;
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet("Template");
 
@@ -128,7 +130,8 @@ export function ImportExportToolbar({
     const file = files[0];
     
     try {
-      const ExcelJS = await import("exceljs");
+      const ExcelJSMod = await import("exceljs");
+      const ExcelJS = ExcelJSMod.default || ExcelJSMod;
       const workbook = new ExcelJS.Workbook();
       const arrayBuffer = await file.arrayBuffer();
       await workbook.xlsx.load(arrayBuffer);
@@ -185,8 +188,10 @@ export function ImportExportToolbar({
 
   // 3. Export data to Excel
   const handleExportExcel = async () => {
-    const ExcelJS = await import("exceljs");
-    const { saveAs } = await import("file-saver");
+    const ExcelJSMod = await import("exceljs");
+    const ExcelJS = ExcelJSMod.default || ExcelJSMod;
+    const fileSaver = await import("file-saver");
+    const saveAs = fileSaver.saveAs || (fileSaver as any).default || fileSaver;
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet("Data Ekspor");
     
@@ -222,8 +227,10 @@ export function ImportExportToolbar({
 
   // 4. Export data to PDF
   const handleExportPDF = async () => {
-    const { jsPDF } = await import("jspdf");
-    const { default: autoTable } = await import("jspdf-autotable");
+    const jsPDFMod = await import("jspdf");
+    const jsPDF = jsPDFMod.jsPDF || jsPDFMod.default || jsPDFMod;
+    const autoTableMod = await import("jspdf-autotable");
+    const autoTable = autoTableMod.default || autoTableMod;
     const doc = new jsPDF();
     doc.setFont("helvetica", "bold");
     doc.text(title, 14, 15);

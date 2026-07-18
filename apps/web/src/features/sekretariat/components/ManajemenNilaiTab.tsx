@@ -14,7 +14,7 @@ export function ManajemenNilaiTab({ isReadOnly: propsIsReadOnly, selectedYearId,
   const [activeCell, setActiveCell] = useState<{ studentId: string; subjectId: string } | null>(null);
   const [errorStatus, setErrorStatus] = useState<string | null>(null);
   const [savingStatus, setSavingStatus] = useState<"idle" | "saving" | "saved">("idle");
-  const [pendingSave, setPendingSave] = useState<{ studentId: string; subjectId: string; score: number } | null>(null);
+  const [pendingSaves, setPendingSaves] = useState<{ studentId: string; subjectId: string; score: number }[]>([]);
   const [selectedKwartal, setSelectedKwartal] = useState<number>(1);
   
   const { data: classes = [] } = useClasses(selectedYearId);
@@ -59,10 +59,10 @@ export function ManajemenNilaiTab({ isReadOnly: propsIsReadOnly, selectedYearId,
     
     // Check bounds based on type (Mapel max 10, Non-Mapel max 8)
     const subject = matrixData?.subjects.find(s => s.id === subjectId);
-    const maxScore = subject?.type === "NON_MAPEL" ? 8 : 10;
+    const maxScore = subject?.type === "MAPEL" ? 10 : 8;
 
     if (isNaN(scoreNum) || scoreNum < 0 || scoreNum > maxScore) {
-      setErrorStatus(`Nilai ${subject?.type === "NON_MAPEL" ? "Non-Mapel" : "Mapel"} "${subject?.name}" dibatasi antara 0 hingga ${maxScore}.`);
+      setErrorStatus(`Nilai ${subject?.type === "MAPEL" ? "Mapel" : "Non-Mapel"} "${subject?.name}" dibatasi antara 0 hingga ${maxScore}.`);
       return;
     }
 
@@ -80,32 +80,41 @@ export function ManajemenNilaiTab({ isReadOnly: propsIsReadOnly, selectedYearId,
     // Trigger auto-save simulation
     setSavingStatus("saving");
     if (!isReadOnly && selectedClassId) {
-      setPendingSave({ studentId, subjectId, score: scoreNum });
-    };
+      setPendingSaves(prev => {
+        const filtered = prev.filter(p => !(p.studentId === studentId && p.subjectId === subjectId));
+        return [...filtered, { studentId, subjectId, score: scoreNum }];
+      });
+    }
   };
 
   // Auto-Save Buffer (Debounce 500ms)
   useEffect(() => {
-    if (!pendingSave) return;
+    if (pendingSaves.length === 0) return;
 
     const delayDebounceFn = setTimeout(() => {
-      saveMutation.mutate({
-        classId: selectedClassId,
-        studentId: pendingSave.studentId,
-        subjectId: pendingSave.subjectId,
-        kwartal: selectedKwartal,
-        score: pendingSave.score
-      }, {
-        onSuccess: () => {
-          setSavingStatus("saved");
-          setTimeout(() => setSavingStatus("idle"), 1500);
-        }
+      pendingSaves.forEach((save) => {
+        saveMutation.mutate({
+          classId: selectedClassId,
+          studentId: save.studentId,
+          subjectId: save.subjectId,
+          kwartal: selectedKwartal,
+          score: save.score
+        }, {
+          onSuccess: () => {
+            setSavingStatus("saved");
+            setTimeout(() => setSavingStatus("idle"), 1500);
+          },
+          onError: (err: any) => {
+            setErrorStatus(err?.message || "Gagal menyimpan nilai.");
+            setSavingStatus("idle");
+          }
+        });
       });
-      setPendingSave(null);
+      setPendingSaves([]);
     }, 500);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [pendingSave, saveMutation, selectedClassId, selectedKwartal]);
+  }, [pendingSaves, saveMutation, selectedClassId, selectedKwartal]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -114,14 +123,14 @@ export function ManajemenNilaiTab({ isReadOnly: propsIsReadOnly, selectedYearId,
         <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
         
         <div className="flex flex-col gap-1.5 z-10 flex-1">
-          <div className="flex items-center gap-2 text-emerald-650 dark:text-emerald-400 text-xs font-bold uppercase tracking-wider">
+          <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 text-xs font-bold uppercase tracking-wider">
             <ClipboardList className="w-4 h-4" />
             <span>Manajemen Nilai Terpusat</span>
           </div>
           <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900 dark:text-white">
             Audit & Koreksi Nilai Kwartal
           </h1>
-          <p className="text-zinc-555 dark:text-zinc-400 text-sm max-w-xl">
+          <p className="text-zinc-500 dark:text-zinc-400 text-sm max-w-xl">
             Layar ini ditujukan bagi Sekretariat untuk memantau, mengaudit, dan mengoreksi nilai yang diinput oleh Mustahiq sebelum pencetakan rapor dan ijazah.
           </p>
         </div>
@@ -247,7 +256,7 @@ export function ManajemenNilaiTab({ isReadOnly: propsIsReadOnly, selectedYearId,
                             isActive 
                               ? "border-emerald-500 ring-2 ring-emerald-500/20 bg-emerald-50 dark:bg-zinc-800 text-emerald-700 dark:text-emerald-400" 
                               : "border-zinc-200 dark:border-zinc-700 bg-zinc-50/50 dark:bg-zinc-900/50"
-                          } dark:text-zinc-100 disabled:opacity-50 disabled:bg-zinc-100 dark:disabled:bg-zinc-850 disabled:cursor-not-allowed`}
+                          } dark:text-zinc-100 disabled:opacity-50 disabled:bg-zinc-100 dark:disabled:bg-zinc-800 disabled:cursor-not-allowed`}
                         />
                       </td>
                     );
