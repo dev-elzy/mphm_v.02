@@ -2,7 +2,9 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/api";
-import { Users, Layers, AlertCircle } from "lucide-react";
+import { Users, Layers, AlertCircle, X } from "lucide-react";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface StudentInfo {
   studentId: string;
@@ -22,6 +24,8 @@ interface MyClassDetail {
 }
 
 export function MustahiqKelasDetail() {
+  const [viewingDetail, setViewingDetail] = useState<StudentInfo | null>(null);
+
   const { data: myClass, isLoading, isError } = useQuery({
     queryKey: ["mustahiq-my-class"],
     queryFn: async () => {
@@ -91,7 +95,11 @@ export function MustahiqKelasDetail() {
                 </tr>
               ) : (
                 myClass.students.map((student: StudentInfo, i: number) => (
-                  <tr key={student.studentId} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
+                  <tr 
+                    key={student.studentId} 
+                    className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 cursor-pointer"
+                    onClick={() => setViewingDetail(student)}
+                  >
                     <td className="px-4 py-3 text-zinc-500">{i + 1}</td>
                     <td className="px-4 py-3 font-medium">{student.fullName}</td>
                     <td className="px-4 py-3">{student.nis || '-'}</td>
@@ -103,6 +111,42 @@ export function MustahiqKelasDetail() {
           </table>
         </div>
       </div>
+
+      {/* Detail Modal */}
+      <AnimatePresence>
+        {viewingDetail && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/40 backdrop-blur-xs" onClick={() => setViewingDetail(null)} />
+            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-2xl shadow-xl z-10 flex flex-col overflow-hidden max-h-[85vh]">
+              <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex justify-between bg-zinc-50 dark:bg-zinc-800/30">
+                <h3 className="font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                  <Users className="w-5 h-5 text-blue-500" />
+                  Detail Santri Kelas
+                </h3>
+                <button onClick={() => setViewingDetail(null)} className="text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 p-1 rounded-md transition-colors"><X className="w-5 h-5"/></button>
+              </div>
+              <div className="p-6 overflow-y-auto space-y-4 text-sm font-medium">
+                <table className="w-full border-collapse">
+                  <tbody>
+                    <tr className="border-b border-zinc-100 dark:border-zinc-800/60">
+                      <td className="py-2.5 pr-4 font-bold text-zinc-400 dark:text-zinc-500 w-1/3 text-left">Nama Lengkap</td>
+                      <td className="py-2.5 text-zinc-800 dark:text-zinc-200 text-left font-bold">{viewingDetail.fullName || "-"}</td>
+                    </tr>
+                    <tr className="border-b border-zinc-100 dark:border-zinc-800/60">
+                      <td className="py-2.5 pr-4 font-bold text-zinc-400 dark:text-zinc-500 w-1/3 text-left">NIS</td>
+                      <td className="py-2.5 text-zinc-800 dark:text-zinc-200 text-left font-mono">{viewingDetail.nis || "-"}</td>
+                    </tr>
+                    <tr className="border-b border-zinc-100 dark:border-zinc-800/60">
+                      <td className="py-2.5 pr-4 font-bold text-zinc-400 dark:text-zinc-500 w-1/3 text-left">NISN</td>
+                      <td className="py-2.5 text-zinc-800 dark:text-zinc-200 text-left font-mono">{viewingDetail.nisn || "-"}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

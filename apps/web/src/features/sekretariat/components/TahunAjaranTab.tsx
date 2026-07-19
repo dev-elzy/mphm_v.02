@@ -34,6 +34,7 @@ export function TahunAjaranTab({ onViewDetail, isReadOnly = false }: TahunAjaran
   // Modal States
   const [showModal, setShowModal] = useState(false);
   const [editingYear, setEditingYear] = useState<AcademicYear | null>(null);
+  const [viewingDetail, setViewingDetail] = useState<AcademicYear | null>(null);
 
   // Form States
   const [name, setName] = useState("");
@@ -236,7 +237,10 @@ export function TahunAjaranTab({ onViewDetail, isReadOnly = false }: TahunAjaran
         pageIndex={0}
         pageSize={10}
         loading={isLoading}
-        onRowClick={(row) => onViewDetail?.(row as unknown as Record<string, unknown>)}
+        onRowClick={(row) => {
+          if (onViewDetail) onViewDetail(row as unknown as Record<string, unknown>);
+          else setViewingDetail(row as unknown as AcademicYear);
+        }}
         tableName="tahun_ajaran"
         importExportProps={{
           title: "Tahun Ajaran & Akademik",
@@ -333,6 +337,50 @@ export function TahunAjaranTab({ onViewDetail, isReadOnly = false }: TahunAjaran
                   </button>
                 </div>
               </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Detail Modal */}
+      <AnimatePresence>
+        {viewingDetail && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/40 backdrop-blur-xs" onClick={() => setViewingDetail(null)} />
+            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-2xl shadow-xl z-10 flex flex-col overflow-hidden max-h-[85vh]">
+              <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex justify-between bg-zinc-50 dark:bg-zinc-800/30">
+                <h3 className="font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                  <Calendar className="w-5 h-5 text-violet-500" />
+                  Detail Tahun Ajaran
+                </h3>
+                <button onClick={() => setViewingDetail(null)} className="text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 p-1 rounded-md transition-colors"><X className="w-5 h-5"/></button>
+              </div>
+              <div className="p-6 overflow-y-auto space-y-4 text-sm font-medium">
+                <table className="w-full border-collapse">
+                  <tbody>
+                    <tr className="border-b border-zinc-100 dark:border-zinc-800/60">
+                      <td className="py-2.5 pr-4 font-bold text-zinc-400 dark:text-zinc-500 w-1/3 text-left">Tahun Akademik</td>
+                      <td className="py-2.5 text-zinc-800 dark:text-zinc-200 text-left font-bold">{viewingDetail.name || "-"}</td>
+                    </tr>
+                    <tr className="border-b border-zinc-100 dark:border-zinc-800/60">
+                      <td className="py-2.5 pr-4 font-bold text-zinc-400 dark:text-zinc-500 w-1/3 text-left">Tanggal Mulai</td>
+                      <td className="py-2.5 text-zinc-800 dark:text-zinc-200 text-left font-mono">{viewingDetail.startDate || "-"}</td>
+                    </tr>
+                    <tr className="border-b border-zinc-100 dark:border-zinc-800/60">
+                      <td className="py-2.5 pr-4 font-bold text-zinc-400 dark:text-zinc-500 w-1/3 text-left">Tanggal Berakhir</td>
+                      <td className="py-2.5 text-zinc-800 dark:text-zinc-200 text-left font-mono">{viewingDetail.endDate || "-"}</td>
+                    </tr>
+                    <tr className="border-b border-zinc-100 dark:border-zinc-800/60">
+                      <td className="py-2.5 pr-4 font-bold text-zinc-400 dark:text-zinc-500 w-1/3 text-left">Status</td>
+                      <td className="py-2.5 text-zinc-800 dark:text-zinc-200 text-left">
+                        <span className={`px-2 py-0.5 rounded text-xs font-bold ${viewingDetail.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                          {viewingDetail.isActive ? 'AKTIF' : 'DRAFT'}
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </motion.div>
           </div>
         )}

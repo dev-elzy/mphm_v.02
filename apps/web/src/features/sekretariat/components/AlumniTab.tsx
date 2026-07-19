@@ -43,6 +43,7 @@ export function AlumniTab({ onViewDetail, isReadOnly = false, selectedYearId }: 
   // Modal States
   const [showFormModal, setShowFormModal] = useState(false);
   const [editingSantri, setEditingSantri] = useState<Santri | null>(null);
+  const [viewingDetail, setViewingDetail] = useState<Santri | null>(null);
 
   // Form States - Pribadi
   const [newName, setNewName] = useState("");
@@ -331,7 +332,7 @@ export function AlumniTab({ onViewDetail, isReadOnly = false, selectedYearId }: 
         onPageSizeChange={setPageSize}
         onSearch={setSearchQuery}
         loading={isLoading}
-        onRowClick={(row) => handleOpenEdit(row as any)}
+        onRowClick={(row) => setViewingDetail(row as unknown as Santri)}
         tableName="santri_alumni"
         importExportProps={{
           title: `Data Induk - Alumni`,
@@ -732,6 +733,55 @@ export function AlumniTab({ onViewDetail, isReadOnly = false, selectedYearId }: 
                   </button>
                 </div>
               </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Detail Modal */}
+      <AnimatePresence>
+        {viewingDetail && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/40 backdrop-blur-xs" onClick={() => setViewingDetail(null)} />
+            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-2xl shadow-xl z-10 flex flex-col overflow-hidden max-h-[85vh]">
+              <div className="p-4 border-b border-zinc-200 dark:border-zinc-800 flex justify-between bg-zinc-50 dark:bg-zinc-800/30">
+                <h3 className="font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                  <User className="w-5 h-5 text-amber-500" />
+                  Detail Alumni
+                </h3>
+                <button onClick={() => setViewingDetail(null)} className="text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800 p-1 rounded-md transition-colors"><X className="w-5 h-5"/></button>
+              </div>
+              <div className="p-6 overflow-y-auto space-y-4 text-sm font-medium">
+                <div className="flex justify-center mb-4">
+                  <div className="w-24 h-24 rounded-full border-2 border-amber-200 overflow-hidden bg-zinc-100 flex items-center justify-center">
+                    {viewingDetail.avatarUrl ? (
+                      <img src={viewingDetail.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                    ) : (
+                      <User className="w-10 h-10 text-zinc-400" />
+                    )}
+                  </div>
+                </div>
+                <table className="w-full border-collapse">
+                  <tbody>
+                    <tr className="border-b border-zinc-100 dark:border-zinc-800/60">
+                      <td className="py-2.5 pr-4 font-bold text-zinc-400 dark:text-zinc-500 w-1/3 text-left">Nama Lengkap</td>
+                      <td className="py-2.5 text-zinc-800 dark:text-zinc-200 text-left font-bold">{viewingDetail.name || "-"}</td>
+                    </tr>
+                    <tr className="border-b border-zinc-100 dark:border-zinc-800/60">
+                      <td className="py-2.5 pr-4 font-bold text-zinc-400 dark:text-zinc-500 w-1/3 text-left">Nomor Stambuk</td>
+                      <td className="py-2.5 text-zinc-800 dark:text-zinc-200 text-left font-mono">{viewingDetail.stambuk || "-"}</td>
+                    </tr>
+                    <tr className="border-b border-zinc-100 dark:border-zinc-800/60">
+                      <td className="py-2.5 pr-4 font-bold text-zinc-400 dark:text-zinc-500 w-1/3 text-left">Tahun Lulus</td>
+                      <td className="py-2.5 text-zinc-800 dark:text-zinc-200 text-left font-mono">{viewingDetail.graduationYear || "-"}</td>
+                    </tr>
+                    <tr className="border-b border-zinc-100 dark:border-zinc-800/60">
+                      <td className="py-2.5 pr-4 font-bold text-zinc-400 dark:text-zinc-500 w-1/3 text-left">Alamat Asal</td>
+                      <td className="py-2.5 text-zinc-800 dark:text-zinc-200 text-left">{viewingDetail.address || "-"}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </motion.div>
           </div>
         )}

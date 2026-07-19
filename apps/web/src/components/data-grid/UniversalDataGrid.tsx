@@ -170,7 +170,7 @@ export function UniversalDataGrid<TData, TValue>({
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <th key={header.id} className="px-6 py-4 font-bold text-xs uppercase tracking-wider text-center text-zinc-500 dark:text-zinc-400">
+                  <th key={header.id} className="px-6 py-4 font-bold text-xs uppercase tracking-wider text-left text-zinc-500 dark:text-zinc-400">
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -191,7 +191,7 @@ export function UniversalDataGrid<TData, TValue>({
                   className={`transition-colors duration-150 ${onRowClick ? "cursor-pointer hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40" : "hover:bg-zinc-50/70 dark:hover:bg-zinc-800/30"}`}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className="px-6 py-4 text-zinc-700 dark:text-zinc-300 whitespace-nowrap text-center align-middle">
+                    <td key={cell.id} className="px-6 py-4 text-zinc-700 dark:text-zinc-300 whitespace-nowrap text-left align-middle">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </td>
                   ))}
